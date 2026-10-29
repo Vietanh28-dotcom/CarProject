@@ -1,0 +1,104 @@
+@page "{id}"
+@model CarProject.Pages.Admin.HoaDon.EditModel
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <h2>Sửa Hóa Đơn</h2>
+            @if (Model.HoaDon == null)
+            {
+                <div class="alert alert-danger">Không tìm thấy hóa đơn.</div>
+            }
+            else
+            {
+                <form method="post">
+                    <input type="hidden" asp-for="HoaDon.MaHoaDon" />
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Mã Hóa Đơn</label>
+                                <input class="form-control" value="@Model.HoaDon.MaHoaDon" disabled />
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="HoaDon.MaDonCoc" class="form-label">Đơn Cọc</label>
+                                <select asp-for="HoaDon.MaDonCoc" asp-items="Model.DonCocList" class="form-control" required></select>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="HoaDon.MaKhachHang" class="form-label">Khách Hàng</label>
+                                <select asp-for="HoaDon.MaKhachHang" asp-items="Model.KhachHangList" class="form-control" required></select>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="HoaDon.MaPhienBan" class="form-label">Phiên Bản</label>
+                                <select asp-for="HoaDon.MaPhienBan" asp-items="Model.PhienBanList" class="form-control" required></select>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="HoaDon.MaQuanLyXuat" class="form-label">Quản Lý Xuất</label>
+                                <select asp-for="HoaDon.MaQuanLyXuat" asp-items="Model.QuanLyXuatList" class="form-control" required></select>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="HoaDon.MaChiNhanh" class="form-label">Chi Nhánh</label>
+                                <select asp-for="HoaDon.MaChiNhanh" asp-items="Model.ChiNhanhList" class="form-control" required>
+                                    <option value="">-- Chọn chi nhánh --</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="HoaDon.GiaXeThucTe" class="form-label">Giá Xe Thực Tế</label>
+                                <input asp-for="HoaDon.GiaXeThucTe" class="form-control" type="number" required />
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="HoaDon.ThueTruocBaVaPhiLanBanh" class="form-label">Thuế Trước Bạ & Phí Lăn Bánh</label>
+                                <input asp-for="HoaDon.ThueTruocBaVaPhiLanBanh" class="form-control" type="number" required />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="HoaDon.SoTienDuocGiam" class="form-label">Số Tiền Được Giảm</label>
+                                <input asp-for="HoaDon.SoTienDuocGiam" class="form-control" type="number" required />
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="HoaDon.TongTienPhaiTra" class="form-label">Tổng Tiền Phải Trả</label>
+                                <input asp-for="HoaDon.TongTienPhaiTra" class="form-control" type="number" required />
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="HoaDon.SoTienDaThanhToan" class="form-label">Số Tiền Đã Thanh Toán</label>
+                                <input asp-for="HoaDon.SoTienDaThanhToan" class="form-control" type="number" required />
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="HoaDon.PhuongThucThanhToan" class="form-label">Phương Thức Thanh Toán</label>
+                                <select asp-for="HoaDon.PhuongThucThanhToan" class="form-control" required>
+                                    <option value="Chuyển khoản">Chuyển khoản</option>
+                                    <option value="Tiền mặt">Tiền mặt</option>
+                                    <option value="Trả góp">Trả góp</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="HoaDon.NgayXuatHoaDon" class="form-label">Ngày Xuất Hóa Đơn</label>
+                                <input asp-for="HoaDon.NgayXuatHoaDon" class="form-control" type="date" required />
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="HoaDon.SoKhung" class="form-label">Số Khung</label>
+                                <input asp-for="HoaDon.SoKhung" class="form-control" required />
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="HoaDon.SoMay" class="form-label">Số Máy</label>
+                                <input asp-for="HoaDon.SoMay" class="form-control" required />
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="HoaDon.TrangThaiHoaDon" class="form-label">Trạng Thái</label>
+                                <select asp-for="HoaDon.TrangThaiHoaDon" class="form-control" required>
+                                    <option value="Đã thanh toán">Đã thanh toán</option>
+                                    <option value="Chưa thanh toán">Chưa thanh toán</option>
+                                    <option value="Một phần">Một phần</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <button type="submit" class="btn btn-primary">Cập nhật</button>
+                        <a asp-page="Index" class="btn btn-secondary">Hủy</a>
+                    </div>
+                </form>
+            }
+        </div>
+    </div>
+</div>

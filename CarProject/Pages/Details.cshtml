@@ -1,0 +1,350 @@
+@page "{id:int}"
+@model CarProject.Pages.DetailsModel
+
+@{
+    ViewData["Title"] = Model.Dong?.TenDong ?? "Chi tiết xe";
+    var firstVer = Model.PhienBans?.FirstOrDefault();
+    var carImg = Model.Dong?.DuongDanAnh ?? firstVer?.DuongDanAnh;
+}
+
+<div class="detail-premium">
+    <!-- Gallery Section -->
+    <div class="gallery-section">
+        <div class="container position-relative">
+            <nav class="breadcrumb-premium position-absolute" style="top: 1.5rem; left: 1rem; z-index: 5; background: rgba(0,0,0,0.5); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); padding: 0.45rem 1rem; border-radius: 50px; border: 1px solid rgba(255,255,255,0.08);">
+                <a asp-page="/Index" style="color: var(--text-muted);"><i class="fas fa-home"></i> Trang chủ</a>
+                <span style="color: var(--text-faint);">/</span>
+                <a asp-page="/Cars" style="color: var(--text-muted);">Showroom</a>
+                <span style="color: var(--text-faint);">/</span>
+                <span style="color: var(--text-soft);">@Model.Dong?.TenDong</span>
+            </nav>
+            <div class="row align-items-center hero-wrap" style="min-height: 500px;">
+                <div class="col-lg-8 offset-lg-2 text-center">
+                    @if (Model.HinhAnhXes.Any())
+                    {
+                        <div class="car-gallery" id="carGallery" data-current="0">
+                            <button type="button" class="car-gallery-nav car-gallery-prev" onclick="galleryMove(-1)" aria-label="Ảnh trước"><i class="fas fa-chevron-left"></i></button>
+                            <button type="button" class="car-gallery-nav car-gallery-next" onclick="galleryMove(1)" aria-label="Ảnh sau"><i class="fas fa-chevron-right"></i></button>
+                            <div class="car-gallery-stage">
+                                @for (int gi = 0; gi < Model.HinhAnhXes.Count; gi++)
+                                {
+                                    <div class="car-gallery-slide @(gi == 0 ? "active" : "")" data-slide="@gi">
+                                        <img src="@Model.HinhAnhXes[gi].DuongDanAnh?v=@DateTime.Now.Ticks" alt="@Model.Dong?.TenDong" class="detail-hero-img" style="max-width:100%;max-height:450px;border-radius:16px;object-fit:contain;" />
+                                    </div>
+                                }
+                            </div>
+                            @if (Model.HinhAnhXes.Count > 1)
+                            {
+                                <div class="car-gallery-thumbs">
+                                    @for (int gi = 0; gi < Model.HinhAnhXes.Count; gi++)
+                                    {
+                                        <div class="car-gallery-thumb @(gi == 0 ? "active" : "")" data-thumb="@gi" onclick="galleryGo(@gi)">
+                                            <img src="@Model.HinhAnhXes[gi].DuongDanAnh?v=@DateTime.Now.Ticks" alt="Ảnh @(gi+1)" />
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                    else if (!string.IsNullOrEmpty(carImg))
+                    {
+                        <img src="@carImg?v=@DateTime.Now.Ticks" alt="@Model.Dong?.TenDong" class="detail-hero-img" style="max-width:100%;max-height:450px;border-radius:16px;object-fit:contain;" />
+                    }
+                    else
+                    {
+                        <div style="font-size:8rem;opacity:0.15;">🚗</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Panel -->
+    <div class="info-panel">
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
+                    @if (Model.HangXe != null)
+                    {
+                        <span class="brand-badge"><i class="fas fa-trophy"></i> @Model.HangXe.TenHang</span>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Dong?.KieuDang))
+                    {
+                        <span class="brand-badge"><i class="fas fa-tag"></i> @Model.Dong.KieuDang</span>
+                    }
+                    @if (Model.HangXe != null)
+                    {
+                        <span class="brand-badge"><i class="fas fa-flag"></i> @Model.HangXe.QuocGia</span>
+                    }
+                </div>
+                <h1>@Model.Dong?.TenDong</h1>
+                <p class="model-subtitle">
+                    <i class="fas fa-layer-group me-1"></i> @Model.PhienBans.Count phiên bản &middot;
+                    <i class="fas fa-box me-1"></i>
+                    @{
+                        var totalStock = Model.PhienBans.Sum(p => p.SoLuongTrongKho);
+                    }
+                    @totalStock xe trong kho
+                </p>
+
+                @if (Model.PhienBans.Any())
+                {
+                    <div class="version-tabs" id="versionTabs">
+                        @foreach (var p in Model.PhienBans.Select((item, idx) => new { item, idx }))
+                        {
+                            <div class="tab @(p.idx == 0 ? "active" : "")"
+                                 onclick="selectVersion(@p.idx)">
+                                @p.item.TenPhienBan
+                            </div>
+                        }
+                    </div>
+                }
+
+                @foreach (var p in Model.PhienBans.Select((item, idx) => new { item, idx }))
+                {
+                    var priceFormatted = p.item.GiaNiemYet >= 1_000_000_000
+                        ? $"{p.item.GiaNiemYet / 1_000_000_000m:N1} tỷ"
+                        : $"{p.item.GiaNiemYet / 1_000_000:N0} triệu";
+                    var isDeposited = Model.TongDaDatCocTheoPhienBan.TryGetValue(p.item.MaPhienBan, out var pbReserved) && pbReserved > 0;
+                    var pbTonKho = p.item.SoLuongTrongKho;
+                    var pbAvailable = pbTonKho - (isDeposited ? pbReserved : 0);
+                    var statusClass = "in";
+                    var statusText = "Còn hàng";
+                    if (pbTonKho <= 0) { statusClass = "out"; statusText = "Hết hàng"; }
+                    else if (pbAvailable <= 0) { statusClass = "deposited"; statusText = "Đã đặt cọc"; }
+                    else if (pbAvailable <= 3) { statusClass = "low"; statusText = "Sắp hết"; }
+
+                    <div class="version-content" id="version-@p.idx" style="display: @(p.idx == 0 ? "block" : "none")">
+                        <div class="price-hero">
+                            @priceFormatted <small>VNĐ</small>
+                            @if (pbTonKho <= 0)
+                            {
+                                <span class="badge-stock out" style="margin-left: 1rem; font-size: 0.7rem; vertical-align: middle;">Hết hàng</span>
+                                <span class="badge-stock preorder" style="margin-left: 0.5rem; font-size: 0.7rem; vertical-align: middle;">Đặt trước</span>
+                            }
+                            else if (pbAvailable <= 0)
+                            {
+                                <span class="badge-stock deposited" style="margin-left: 1rem; font-size: 0.7rem; vertical-align: middle;">Đã đặt cọc</span>
+                            }
+                            else
+                            {
+                                <span class="badge-stock @statusClass" style="margin-left: 1rem; font-size: 0.7rem; vertical-align: middle;">@statusText</span>
+                            }
+                        </div>
+
+                        <div class="quick-specs-grid">
+                            <div class="spec-item">
+                                <div class="label">Màu sắc</div>
+                                <div class="value">@p.item.MauSac</div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="label">Động cơ</div>
+                                <div class="value">@p.item.DongCo</div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="label">Hộp số</div>
+                                <div class="value">@p.item.HopSo</div>
+                            </div>
+                            <div class="spec-item">
+                                <div class="label">Nhiên liệu</div>
+                                <div class="value">@p.item.LoaiNhietLieu</div>
+                            </div>
+                        </div>
+
+                        <div class="cta-group">
+                            <button class="btn-cta btn-cart" 
+    data-maphienban="@p.item.MaPhienBan"
+    data-tenphienban="@p.item.TenPhienBan"
+    data-tendong="@(p.item.DongXe?.TenDong ?? "")"
+    data-gianiemyet="@p.item.GiaNiemYet"
+    data-mausac="@(p.item.MauSac ?? "")"
+    data-dongco="@(p.item.DongCo ?? "")"
+    data-hopso="@(p.item.HopSo ?? "")"
+    data-duongdananh="@(p.item.DuongDanAnh ?? "")"
+    onclick="addToCart(parseInt(this.dataset.maphienban), this.dataset.tenphienban, this.dataset.tendong, parseInt(this.dataset.gianiemyet), this.dataset.mausac, this.dataset.dongco, this.dataset.hopso, this.dataset.duongdananh)">
+    <i class="fas fa-shopping-bag"></i> Thêm giỏ hàng
+</button>
+                            @if (pbAvailable <= 0)
+                            {
+                                <a asp-page="/Orders/DepositForm" asp-route-id="@Model.Dong?.MaDong" class="btn-cta btn-deposit">
+                                    <i class="fas fa-clock"></i> Đặt trước
+                                </a>
+                            }
+                            else
+                            {
+                                <a href="#" class="btn-cta btn-deposit btn-deposit-disabled" onclick="showToast('Xe đang còn hàng trong kho, không cần đặt trước. Hãy thêm vào giỏ hàng để đặt mua.', true); return false;">
+                                    <i class="fas fa-clock"></i> Đặt trước
+                                </a>
+                            }
+                            <a asp-page="/TestDrive" class="btn-cta btn-testdrive">
+                                <i class="fas fa-calendar-check"></i> Đăng ký lái thử
+                            </a>
+                        </div>
+
+                        @if (Model.TonKhoTheoPhienBan.TryGetValue(p.item.MaPhienBan, out var tonKhoList) && tonKhoList.Any())
+                        {
+                            <div style="margin-top: 1rem; padding: 0.8rem; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.04);">
+                                <div style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.5px;">Phân bổ showroom</div>
+                                <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                                    @foreach (var tk in tonKhoList.Where(t => t.SoLuong > 0))
+                                    {
+                                        var tkReserved = 0;
+                                        if (Model.DaDatCocTheoPhienBanVaChiNhanh.TryGetValue(p.item.MaPhienBan, out var cnRes) && cnRes.TryGetValue(tk.MaChiNhanh, out var rq))
+                                        {
+                                            tkReserved = rq;
+                                        }
+                                        var tkAvailable = tk.SoLuong - tkReserved;
+                                        <span style="background: rgba(255,255,255,0.04); padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; color: var(--text-soft);">
+                                            @tk.ChiNhanh?.TenChiNhanh: <strong style="color: var(--brand-gold);">@tk.SoLuong</strong>
+                                            @if (tkReserved > 0)
+                                            {
+                                                <span style="color: var(--text-faint);">(đã cọc @tkReserved, còn @tkAvailable)</span>
+                                            }
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+                        }
+
+                        @if (Model.DaDatCocTheoPhienBanVaChiNhanh.TryGetValue(p.item.MaPhienBan, out var reservedCn) && reservedCn.Any())
+                        {
+                            <div style="margin-top: 1rem; padding: 0.8rem; background: rgba(217,70,239,0.06); border-radius: 8px; border: 1px solid rgba(217,70,239,0.15);">
+                                <div style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.5px;">Đã được đặt cọc</div>
+                                <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                                    @foreach (var kv in reservedCn.OrderBy(k => k.Key))
+                                    {
+                                        var cnName = tonKhoList?.FirstOrDefault(t => t.MaChiNhanh == kv.Key)?.ChiNhanh?.TenChiNhanh ?? kv.Key;
+                                        <span style="background: rgba(217,70,239,0.12); padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; color: #d946ef;">
+                                            @cnName: <strong>@kv.Value</strong>
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <!-- Quick specs sidebar -->
+            <div class="col-lg-4">
+                @if (Model.PhienBans.Any())
+                {
+                    var first = Model.PhienBans.First();
+                    <div class="glass-card" style="padding: 1.5rem;">
+                        <h6 style="font-family: var(--font-title); font-weight: 700; margin-bottom: 1rem; font-size: 0.8rem; color: var(--brand-white); letter-spacing: 1px; text-transform: uppercase;">Thông số kỹ thuật</h6>
+                        <table class="specs-table">
+                            <tr><td>Động cơ</td><td>@first.DongCo</td></tr>
+                            <tr><td>Hộp số</td><td>@first.HopSo</td></tr>
+                            <tr><td>Dẫn động</td><td>@(first.LoaiNhietLieu.Contains("Điện") ? "Điện" : "Động cơ đốt trong")</td></tr>
+                            <tr><td>Nhiên liệu</td><td>@first.LoaiNhietLieu</td></tr>
+                            <tr><td>Màu sắc</td><td>@first.MauSac</td></tr>
+                            <tr><td>Tồn kho</td><td>@first.SoLuongTrongKho xe</td></tr>
+                            @{
+                                var firstReserved = Model.TongDaDatCocTheoPhienBan.TryGetValue(first.MaPhienBan, out var fr) ? fr : 0;
+                            }
+                            <tr><td>Đã đặt cọc</td><td style="color: #d946ef; font-weight: 600;">@firstReserved xe</td></tr>
+                            @if (Model.TonKhoTheoPhienBan.TryGetValue(first.MaPhienBan, out var sidebarTonKho) && sidebarTonKho.Any())
+                            {
+                                <tr><td colspan="2" style="padding:0.3rem 0;">
+                                    <div style="font-size:0.68rem;color:var(--text-faint);">Phân bổ:</div>
+                                    @foreach (var tk in sidebarTonKho)
+                                    {
+                                        var tkR = Model.DaDatCocTheoPhienBanVaChiNhanh.TryGetValue(first.MaPhienBan, out var sideRes) && sideRes.TryGetValue(tk.MaChiNhanh, out var sr) ? sr : 0;
+                                        <div style="font-size:0.68rem;display:flex;justify-content:space-between;padding:0.1rem 0;">
+                                            <span style="color:var(--text-muted);">@tk.ChiNhanh?.TenChiNhanh</span>
+                                            <span style="color:var(--brand-gold);">@tk.SoLuong@(tkR > 0 ? $" (đã cọc {tkR})" : "")</span>
+                                        </div>
+                                    }
+                                </td></tr>
+                            }
+                        </table>
+                    </div>
+                }
+
+                <div class="glass-card" style="padding: 1.5rem; margin-top: 1rem;">
+                    <h6 style="font-family: var(--font-title); font-weight: 700; margin-bottom: 0.5rem; font-size: 0.8rem; color: var(--brand-white); letter-spacing: 1px; text-transform: uppercase;">
+                        <i class="fas fa-headset"></i> Cần tư vấn?
+                    </h6>
+                    <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1rem;">
+                        Đội ngũ chuyên viên của chúng tôi sẵn sàng hỗ trợ bạn.
+                    </p>
+                    <a href="tel:18006886" class="btn-premium btn-premium-silver" style="width: 100%; justify-content: center; padding: 0.6rem; font-size: 0.7rem;">
+                        <i class="fas fa-phone-alt"></i> Gọi 1800 6886
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (Model.PhienBans.Any())
+{
+    <div class="section-premium section-premium-alt">
+        <div class="container">
+            <div class="text-center mb-5">
+                <p class="section-label justify-content-center">Chi tiết</p>
+                <h2 class="section-heading text-center">Thông số kỹ thuật chi tiết</h2>
+            </div>
+
+            @{
+                var firstPb = Model.PhienBans.First();
+            }
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="glass-card" style="padding: 2rem;">
+                        <table class="specs-table">
+                            <tr><td>Động cơ</td><td>@firstPb.DongCo</td></tr>
+                            <tr><td>Hộp số</td><td>@firstPb.HopSo</td></tr>
+                            <tr><td>Loại nhiên liệu</td><td>@firstPb.LoaiNhietLieu</td></tr>
+                            <tr><td>Màu sắc ngoại thất</td><td>@firstPb.MauSac</td></tr>
+                            <tr><td>Giá niêm yết</td><td style="font-weight: 800;">@(firstPb.GiaNiemYet.ToString("N0")) VNĐ</td></tr>
+                            <tr><td>Tình trạng</td><td>Mới 100%</td></tr>
+                            <tr><td>Bảo hành</td><td>3 năm hoặc 100.000 km</td></tr>
+                            <tr><td>Xuất xứ</td><td>@(Model.HangXe?.TenHang ?? "N/A") - @(Model.HangXe?.QuocGia ?? "N/A")</td></tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<script>
+    function selectVersion(idx) {
+        document.querySelectorAll('.version-content').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.version-tabs .tab').forEach(el => el.classList.remove('active'));
+        document.getElementById('version-' + idx).style.display = 'block';
+        document.querySelectorAll('.version-tabs .tab')[idx].classList.add('active');
+    }
+    function galleryGo(idx) {
+        const gallery = document.getElementById('carGallery');
+        if (!gallery) return;
+        const slides = gallery.querySelectorAll('.car-gallery-slide');
+        const thumbs = gallery.querySelectorAll('.car-gallery-thumb');
+        if (!slides.length) return;
+        if (idx < 0) idx = 0;
+        if (idx >= slides.length) idx = slides.length - 1;
+        slides.forEach((s, i) => s.classList.toggle('active', i === idx));
+        thumbs.forEach((t, i) => t.classList.toggle('active', i === idx));
+        gallery.dataset.current = idx;
+        const nextBtn = gallery.querySelector('.car-gallery-next');
+        const prevBtn = gallery.querySelector('.car-gallery-prev');
+        if (nextBtn) nextBtn.style.display = idx >= slides.length - 1 ? 'none' : '';
+        if (prevBtn) prevBtn.style.display = idx <= 0 ? 'none' : '';
+    }
+    function galleryMove(dir) {
+        const gallery = document.getElementById('carGallery');
+        if (!gallery) return;
+        galleryGo(parseInt(gallery.dataset.current || '0') + dir);
+    }
+    document.addEventListener('DOMContentLoaded', () => galleryGo(0));
+</script>
+    @if (TempData["DepositError"] != null)
+    {
+        <text>
+        $(function () {
+            if (window.showToast) window.showToast('@TempData["DepositError"]', true);
+        });
+        </text>
+    }
+</script>

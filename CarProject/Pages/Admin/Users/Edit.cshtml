@@ -1,0 +1,116 @@
+@page "{id}"
+@model CarProject.Pages.Admin.Users.EditModel
+@{
+    ViewData["Title"] = "Sửa người dùng";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4"><i class="bi bi-pencil-fill"></i> Sửa thông tin người dùng</h2>
+
+    @if (!string.IsNullOrEmpty(Model.Message))
+    {
+        <div class="alert alert-@(Model.MessageType == "success" ? "success" : "danger")">@Model.Message</div>
+    }
+
+    @if (Model.User == null)
+    {
+        <div class="alert alert-danger">Không tìm thấy người dùng.</div>
+        <a asp-page="Index" class="btn btn-outline-secondary btn-sm">← Quay lại</a>
+    }
+    else
+    {
+        <form method="post">
+            <input type="hidden" asp-for="User.TenDangNhap" />
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Tên đăng nhập</label>
+                        <input class="form-control" value="@Model.User.TenDangNhap" disabled />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Mã tài khoản</label>
+                        <input class="form-control" value="@Model.User.MaTaiKhoan" disabled />
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="User.TenHienThi" class="form-label">Tên hiển thị</label>
+                        <input asp-for="User.TenHienThi" class="form-control" />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="User.Email" class="form-label">Email</label>
+                        <input asp-for="User.Email" type="email" class="form-control" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label asp-for="User.VaiTro" class="form-label">Vai trò</label>
+                        <select asp-for="User.VaiTro" class="form-control" id="roleSelect" onchange="toggleShowroom()">
+                            <option value="User">User</option>
+                            <option value="Quản Lý">Quản Lý</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4" id="showroomField">
+                    <div class="mb-3">
+                        <label asp-for="MaChiNhanhQuanLy" class="form-label">Chi nhánh quản lý</label>
+                        <select asp-for="MaChiNhanhQuanLy" class="form-control" id="showroomSelect">
+                            <option value="">— Chưa phân —</option>
+                            @foreach (var cn in Model.DanhSachChiNhanh)
+                            {
+                                <option value="@cn.MaChiNhanh">@cn.TenChiNhanh</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label asp-for="User.TrangThai" class="form-label">Trạng thái</label>
+                        <select asp-for="User.TrangThai" class="form-control">
+                            <option value="Active">Hoạt động</option>
+                            <option value="Banned">Bị khóa</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="User.AvatarUrl" class="form-label">Đường dẫn Avatar</label>
+                <input asp-for="User.AvatarUrl" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="MatKhauMoi" class="form-label">Mật khẩu mới (để trống nếu không đổi)</label>
+                <input asp-for="MatKhauMoi" type="password" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                <a asp-page="Index" class="btn btn-secondary">Hủy</a>
+            </div>
+        </form>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function toggleShowroom() {
+            var role = document.getElementById('roleSelect').value;
+            var field = document.getElementById('showroomField');
+            field.style.display = role === 'Quản Lý' ? '' : 'none';
+        }
+        toggleShowroom();
+    </script>
+}

@@ -1,0 +1,67 @@
+@page
+@model CarProject.Pages.Admin.HangXe.IndexModel
+
+<div class="container-fluid db-wrap">
+    <div class="db-toolbar">
+        <div>
+            <h1 class="db-title">Quản lý Hãng Xe</h1>
+            <div class="db-subtitle">Tổng cộng @Model.HangXeList.Count hãng · Dashboard quản trị</div>
+        </div>
+        <a asp-page="Create" class="db-btn-primary">
+            <i class="fas fa-plus me-1"></i> Thêm Hãng Xe
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">@TempData["Success"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">@TempData["Error"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    }
+
+    @if (Model.HangXeList.Count == 0)
+    {
+        <div class="alert alert-info">Không có hãng xe nào.</div>
+    }
+    else
+    {
+        <div class="db-card">
+            <div class="db-table-responsive">
+                <table class="db-table" style="min-width:960px;">
+                    <colgroup>
+                        <col style="width:80px" />
+                        <col style="width:250px" />
+                        <col style="width:200px" />
+                        <col style="width:120px" />
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>Mã</th>
+                            <th>Tên Hãng</th>
+                            <th>Quốc Gia</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var hang in Model.HangXeList)
+                        {
+                            <tr>
+                                <td><span class="db-id">#@hang.MaHang</span></td>
+                                <td><div class="db-name">@hang.TenHang</div></td>
+                                <td><div class="db-sub">@hang.QuocGia</div></td>
+                                <td>
+                                    <div class="db-actions">
+                                        <a asp-page="Edit" asp-route-id="@hang.MaHang" class="db-act edit" title="Sửa"><i class="fas fa-edit"></i></a>
+                                        <a asp-page="Delete" asp-route-id="@hang.MaHang" class="db-act del" title="Xóa" onclick="return confirm('Xác nhận xóa?');"><i class="fas fa-trash-alt"></i></a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

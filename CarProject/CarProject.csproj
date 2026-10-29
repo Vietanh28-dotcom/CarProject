@@ -1,0 +1,39 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>8a2f135d-2f41-4497-b58c-4734607c0ed9</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="10.0.9" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.9" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
+    <PackageReference Include="QRCoder" Version="1.8.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CarProject.ServiceDefaults\CarProject.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\uploads\avatars\" />
+  </ItemGroup>
+
+  <Target Name="SignAfterBuild" AfterTargets="AfterBuild">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\..\build\sign-after-build.ps1&quot; -TargetPath &quot;$(TargetPath)&quot; -ProjectDir &quot;$(MSBuildProjectDirectory)&quot;" />
+  </Target>
+
+</Project>

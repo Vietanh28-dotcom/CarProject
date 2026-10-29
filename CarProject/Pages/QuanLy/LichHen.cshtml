@@ -1,0 +1,132 @@
+@page
+@model CarProject.Pages.QuanLy.LichHenModel
+@{
+    ViewData["Title"] = "Quản lý lịch hẹn";
+    Layout = "_Layout";
+}
+
+<style>
+    .ql-header { background: linear-gradient(135deg, #1a1a2e, #16213e); color: #fff; padding: 2rem 0; margin-bottom: 2rem; }
+    .ql-card { background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); padding: 1.5rem; }
+    .badge-pending { background: #fef3c7; color: #92400e; }
+    .badge-confirmed { background: #d1fae5; color: #065f46; }
+    .badge-rejected { background: #fee2e2; color: #991b1b; }
+    .badge-done { background: #e0e7ff; color: #3730a3; }
+    .badge-sold { background: #d1fae5; color: #065f46; }
+    .badge-not-sold { background: #fee2e2; color: #991b1b; }
+</style>
+
+<div class="ql-header">
+    <div class="container">
+        <h1 style="font-size: 1.5rem; font-weight: 600; margin: 0;">
+            <i class="fas fa-calendar-alt me-2"></i> Quản lý lịch hẹn
+        </h1>
+        @if (Model.Showroom != null)
+        {
+            <p class="mb-0 mt-1" style="opacity: 0.7;">Showroom: <strong>@Model.Showroom.TenChiNhanh</strong></p>
+        }
+    </div>
+</div>
+
+<div class="container" style="padding-bottom: 3rem;">
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <div class="alert alert-success">@Model.SuccessMessage</div>
+    }
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-warning">@Model.ErrorMessage</div>
+    }
+
+    @if (!Model.DanhSachLichHen.Any())
+    {
+        <div class="text-center py-5">
+            <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.2;"><i class="fas fa-calendar-alt"></i></div>
+            <h4 style="color: #333;">Chưa có lịch hẹn nào</h4>
+        </div>
+    }
+    else
+    {
+        <div class="ql-card">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Khách hàng</th>
+                            <th>SĐT</th>
+                            <th>Xe</th>
+                            <th>Ngày</th>
+                            <th>Giờ</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var l in Model.DanhSachLichHen)
+                        {
+                            <tr>
+                                <td><strong>@l.HoTenNguoiLai</strong><br><small class="text-muted">@l.KhachHang?.TenDangNhap</small></td>
+                                <td>@l.SoDienThoai</td>
+                                <td>@l.DongXe?.TenDong</td>
+                                <td>@(l.NgayHen?.ToString("dd/MM/yyyy") ?? "Chưa chốt")</td>
+                                <td>@l.GioHen</td>
+                                <td>
+                                    @switch (l.TrangThai)
+                                    {
+                                        case "Chờ xác nhận":
+                                            <span class="badge badge-pending">Chờ xác nhận</span>
+                                            break;
+                                        case "Đã xác nhận":
+                                            <span class="badge badge-confirmed">Đã xác nhận</span>
+                                            break;
+                                        case "Từ chối":
+                                            <span class="badge badge-rejected">Từ chối</span>
+                                            break;
+                                        case "Hoàn thành":
+                                            <span class="badge badge-done">Hoàn thành</span>
+                                            break;
+                                        case "Hoàn thành - Bán":
+                                            <span class="badge badge-sold">Hoàn thành - Bán</span>
+                                            break;
+                                        case "Hoàn thành - Không bán":
+                                            <span class="badge badge-not-sold">Hoàn thành - Không bán</span>
+                                            break;
+                                        default:
+                                            <span class="badge bg-secondary">@l.TrangThai</span>
+                                            break;
+                                    }
+                                </td>
+                                <td>
+                                    @if (l.TrangThai == "Chờ xác nhận")
+                                    {
+                                        <form method="post" asp-page-handler="Accept" style="display:inline">
+                                            <input type="hidden" name="maLichHen" value="@l.MaLichHen" />
+                                            <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-check"></i> Duyệt</button>
+                                        </form>
+                                        <form method="post" asp-page-handler="Reject" style="display:inline">
+                                            <input type="hidden" name="maLichHen" value="@l.MaLichHen" />
+                                            <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-times"></i> Từ chối</button>
+                                        </form>
+                                    }
+                                    else if (l.TrangThai == "Đã xác nhận")
+                                    {
+                                        <form method="post" asp-page-handler="Complete" style="display:inline; margin-right: 0.25rem;">
+                                            <input type="hidden" name="maLichHen" value="@l.MaLichHen" />
+                                            <input type="hidden" name="daBan" value="true" />
+                                            <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-tag"></i> Bán</button>
+                                        </form>
+                                        <form method="post" asp-page-handler="Complete" style="display:inline">
+                                            <input type="hidden" name="maLichHen" value="@l.MaLichHen" />
+                                            <input type="hidden" name="daBan" value="false" />
+                                            <button type="submit" class="btn btn-secondary btn-sm"><i class="fas fa-times-circle"></i> Không bán</button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

@@ -1,0 +1,28 @@
+@page
+@model CarProject.Pages.Admin.DongXe.CreateModel
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6">
+            <h2>Thêm Dòng Xe</h2>
+            <form method="post">
+                <div class="mb-3">
+                    <label asp-for="DongXe.MaHang" class="form-label">Hãng Xe</label>
+                    <select asp-for="DongXe.MaHang" asp-items="Model.HangList" class="form-control" required></select>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="DongXe.TenDong" class="form-label">Tên Dòng</label>
+                    <input asp-for="DongXe.TenDong" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                    <label asp-for="DongXe.KieuDang" class="form-label">Kiểu Dáng</label>
+                    <input asp-for="DongXe.KieuDang" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <button type="submit" class="btn btn-primary">Thêm</button>
+                    <a asp-page="Index" class="btn btn-secondary">Hủy</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

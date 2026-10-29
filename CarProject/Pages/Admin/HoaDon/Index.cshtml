@@ -1,0 +1,118 @@
+@page
+@model CarProject.Pages.Admin.HoaDon.IndexModel
+
+<div class="container-fluid db-wrap">
+    <div class="db-toolbar">
+        <div>
+            <h1 class="db-title">Quản lý Hóa Đơn</h1>
+            <div class="db-subtitle">Tổng cộng @Model.HoaDonList.Count hóa đơn · Dashboard quản trị</div>
+        </div>
+        <a asp-page="Create" class="db-btn-primary">
+            <i class="fas fa-plus me-1"></i> Thêm Hóa Đơn
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">@TempData["Success"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">@TempData["Error"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    }
+
+    @if (Model.HoaDonList.Count == 0)
+    {
+        <div class="alert alert-info">Không có hóa đơn nào.</div>
+    }
+    else
+    {
+        <div class="db-card">
+            <div class="db-table-responsive">
+                <table class="db-table" style="min-width:1460px;">
+                    <colgroup>
+                        <col style="width:170px" />
+                        <col style="width:80px" />
+                        <col style="width:200px" />
+                        <col style="width:200px" />
+                        <col style="width:140px" />
+                        <col style="width:140px" />
+                        <col style="width:150px" />
+                        <col style="width:140px" />
+                        <col style="width:120px" />
+                        <col style="width:130px" />
+                        <col style="width:120px" />
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>Mã HĐ</th>
+                            <th>Đơn cọc</th>
+                            <th>Khách hàng</th>
+                            <th>Chi nhánh</th>
+                            <th>Giá xe</th>
+                            <th>Đã thanh toán</th>
+                            <th>Tổng tiền</th>
+                            <th>Còn lại</th>
+                            <th>Ngày xuất</th>
+                            <th>Trạng thái</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var hd in Model.HoaDonList)
+                        {
+                            <tr>
+                                <td><span class="db-id">@hd.MaHoaDon</span></td>
+
+                                <td><span class="db-id">#@hd.MaDonCoc</span></td>
+
+                                <td>
+                                    <div class="db-sub" style="font-weight:600;">@(hd.DonDatCoc?.HoTen ?? "—")</div>
+                                    <small class="text-muted">@(hd.DonDatCoc?.MaKhachHang ?? "")</small>
+                                </td>
+
+                                <td><div class="db-2line">@(hd.ChiNhanh?.TenChiNhanh ?? "—")</div></td>
+
+                                <td><span class="db-money">@hd.GiaXeThucTe.ToString("N0")đ</span></td>
+
+                                <td><span class="db-money">@hd.SoTienDaThanhToan.ToString("N0")đ</span></td>
+
+                                <td><span class="db-money">@hd.TongTienPhaiTra.ToString("N0")đ</span></td>
+
+                                <td><span class="db-money">@((hd.TongTienPhaiTra - hd.SoTienDaThanhToan).ToString("N0"))đ</span></td>
+
+                                <td><div class="db-date">@hd.NgayXuatHoaDon.ToString("dd/MM/yyyy")</div></td>
+
+                                <td>
+                                    @switch (hd.TrangThaiHoaDon)
+                                    {
+                                        case "Đã thanh toán":
+                                            <span class="db-badge green">@hd.TrangThaiHoaDon</span>
+                                            break;
+                                        case "Một phần":
+                                            <span class="db-badge yellow">@hd.TrangThaiHoaDon</span>
+                                            break;
+                                        case "Chưa thanh toán":
+                                        case "Đã hủy":
+                                            <span class="db-badge red">@hd.TrangThaiHoaDon</span>
+                                            break;
+                                        default:
+                                            <span class="db-badge gray">@hd.TrangThaiHoaDon</span>
+                                            break;
+                                    }
+                                </td>
+
+                                <td>
+                                    <div class="db-actions">
+                                        <a asp-page="Edit" asp-route-id="@hd.MaHoaDon" class="db-act edit" title="Sửa"><i class="fas fa-edit"></i></a>
+                                        <a asp-page="Delete" asp-route-id="@hd.MaHoaDon" class="db-act del" title="Xóa" onclick="return confirm('Xác nhận xóa?');"><i class="fas fa-trash-alt"></i></a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

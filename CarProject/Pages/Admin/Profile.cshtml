@@ -1,0 +1,279 @@
+@page
+@model CarProject.Pages.Admin.ProfileModel
+@{
+    ViewData["Title"] = "Hồ sơ của tôi";
+}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+
+<div class="container mt-4">
+    <h2 class="mb-4"><i class="bi bi-person-circle"></i> Hồ sơ của tôi</h2>
+
+    @if (!string.IsNullOrEmpty(Model.Message))
+    {
+        <div class="alert alert-@(Model.MessageType == "success" ? "success" : "danger")">@Model.Message</div>
+    }
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div id="adminAvatarPreview" style="width: 120px; height: 120px; border-radius: 50%; overflow: hidden; margin: 0 auto 1rem; background: #e9ecef; display: flex; align-items: center; justify-content: center;">
+                        @if (!string.IsNullOrEmpty(Model.AvatarUrl))
+                        {
+                            <img src="@Model.AvatarUrl" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;" />
+                        }
+                        else
+                        {
+                            <i class="fas fa-user" style="font-size: 3rem; color: #aaa;"></i>
+                        }
+                    </div>
+                    <h5>@Model.TenHienThi</h5>
+                    <p class="text-muted">@@@Model.UserName</p>
+                    <span class="badge bg-danger">@Model.VaiTro</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        <input type="hidden" asp-for="UserName" />
+
+                        <div class="mb-3">
+                            <label asp-for="TenHienThi" class="form-label">Tên hiển thị</label>
+                            <input asp-for="TenHienThi" class="form-control" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label">Email</label>
+                            <input asp-for="Email" type="email" class="form-control" />
+                        </div>
+
+                        <hr class="my-4">
+                        <h6>Ảnh đại diện</h6>
+
+                        <div class="mb-3">
+                            <label class="form-label">Tải ảnh từ máy (có cắt chỉnh)</label>
+                            <input type="file" id="adminAvatarInput" accept="image/*" class="form-control" />
+                            <div class="form-text">Chọn ảnh, kéo/thu phóng để cắt vừa ý rồi xác nhận.</div>
+                        </div>
+
+                        <div id="adminCropArea" style="display:none;" class="mb-3 p-3 border rounded">
+                            <div style="width: 250px; height: 250px; margin: 0 auto; overflow: hidden; position: relative; cursor: grab; border: 2px dashed #ccc; border-radius: 50%;" id="adminCropViewport">
+                                <img id="adminCropImage" src="" alt="" style="position: absolute; top: 0; left: 0; transform-origin: 0 0; user-select: none; -webkit-user-drag: none;" />
+                            </div>
+                            <div class="d-flex justify-content-center gap-3 mt-2">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="adminZoomCrop(-0.1)" title="Thu nhỏ"><i class="bi bi-zoom-out"></i></button>
+                                <span id="adminZoomLevel" style="font-size:0.85rem; align-self:center;">100%</span>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="adminZoomCrop(0.1)" title="Phóng to"><i class="bi bi-zoom-in"></i></button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="adminResetCrop()" title="Đặt lại"><i class="bi bi-arrow-counterclockwise"></i></button>
+                                <button type="button" class="btn btn-success btn-sm" onclick="adminConfirmCrop()" title="Xác nhận cắt"><i class="bi bi-check-lg"></i> Cắt & dùng</button>
+                            </div>
+                        </div>
+
+                        <input type="hidden" asp-for="AvatarUrl" id="adminAvatarUrlInput" />
+                        <input type="hidden" id="adminAvatarUploaded" value="" />
+
+                        <div class="mb-3">
+                            <label class="form-label">Hoặc nhập đường dẫn ảnh (URL)</label>
+                            <div class="input-group">
+                                <input type="text" id="adminUrlInput" class="form-control" placeholder="https://example.com/avatar.jpg" value="@Model.AvatarUrl" />
+                                <button type="button" class="btn btn-outline-secondary" onclick="adminUseUrl()">Dùng URL</button>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+                        <h6>Đổi mật khẩu</h6>
+
+                        <div class="mb-3">
+                            <label asp-for="MatKhauCu" class="form-label">Mật khẩu cũ</label>
+                            <input asp-for="MatKhauCu" type="password" class="form-control" />
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="MatKhauMoi" class="form-label">Mật khẩu mới</label>
+                                    <input asp-for="MatKhauMoi" type="password" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="XacNhanMatKhau" class="form-label">Xác nhận mật khẩu</label>
+                                    <input asp-for="XacNhanMatKhau" type="password" class="form-control" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Lưu thay đổi</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@Html.AntiForgeryToken()
+
+@section Scripts {
+<script>
+// === Crop state ===
+var adminCrop = { img: null, x: 0, y: 0, zoom: 1, baseW: 0, baseH: 0, dragging: false, dragStartX: 0, dragStartY: 0, startX: 0, startY: 0 };
+var VP_SIZE = 250;
+
+document.getElementById('adminAvatarInput').addEventListener('change', function(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    if (!['image/jpeg','image/png','image/gif','image/webp'].includes(file.type)) {
+        alert('Chỉ chấp nhận file ảnh (JPEG, PNG, GIF, WebP).');
+        this.value = '';
+        return;
+    }
+    var reader = new FileReader();
+    reader.onload = function(ev) { adminOpenCrop(ev.target.result); };
+    reader.readAsDataURL(file);
+    this.value = '';
+});
+
+function adminOpenCrop(src) {
+    var img = new Image();
+    img.onload = function() {
+        adminCrop.img = img;
+        adminCrop.baseW = img.naturalWidth;
+        adminCrop.baseH = img.naturalHeight;
+        adminResetCrop();
+        document.getElementById('adminCropImage').src = src;
+        document.getElementById('adminCropArea').style.display = 'block';
+    };
+    img.src = src;
+}
+
+function adminResetCrop() {
+    var scale = Math.max(VP_SIZE / adminCrop.baseW, VP_SIZE / adminCrop.baseH);
+    adminCrop.zoom = scale;
+    adminCrop.x = (VP_SIZE - adminCrop.baseW * scale) / 2;
+    adminCrop.y = (VP_SIZE - adminCrop.baseH * scale) / 2;
+    adminApplyCrop();
+}
+
+function adminZoomCrop(delta) {
+    var oldZoom = adminCrop.zoom;
+    var newZoom = Math.max(0.2, Math.min(5, oldZoom + delta));
+    if (newZoom === oldZoom) return;
+    var cx = VP_SIZE / 2, cy = VP_SIZE / 2;
+    adminCrop.x = cx - (cx - adminCrop.x) * (newZoom / oldZoom);
+    adminCrop.y = cy - (cy - adminCrop.y) * (newZoom / oldZoom);
+    adminCrop.zoom = newZoom;
+    adminApplyCrop();
+}
+
+function adminApplyCrop() {
+    var img = document.getElementById('adminCropImage');
+    img.style.transform = 'translate(' + adminCrop.x + 'px, ' + adminCrop.y + 'px) scale(' + adminCrop.zoom + ')';
+    document.getElementById('adminZoomLevel').textContent = Math.round(adminCrop.zoom * 100) + '%';
+}
+
+// Drag
+(function() {
+    var vp = document.getElementById('adminCropViewport');
+    vp.addEventListener('mousedown', function(e) {
+        if (e.target.tagName === 'BUTTON') return;
+        adminCrop.dragging = true;
+        adminCrop.dragStartX = e.clientX;
+        adminCrop.dragStartY = e.clientY;
+        adminCrop.startX = adminCrop.x;
+        adminCrop.startY = adminCrop.y;
+        vp.style.cursor = 'grabbing';
+    });
+    document.addEventListener('mousemove', function(e) {
+        if (!adminCrop.dragging) return;
+        adminCrop.x = adminCrop.startX + (e.clientX - adminCrop.dragStartX);
+        adminCrop.y = adminCrop.startY + (e.clientY - adminCrop.dragStartY);
+        adminApplyCrop();
+    });
+    document.addEventListener('mouseup', function() {
+        if (!adminCrop.dragging) return;
+        adminCrop.dragging = false;
+        vp.style.cursor = 'grab';
+    });
+    vp.addEventListener('touchstart', function(e) {
+        if (e.target.tagName === 'BUTTON') return;
+        var t = e.touches[0];
+        adminCrop.dragging = true;
+        adminCrop.dragStartX = t.clientX;
+        adminCrop.dragStartY = t.clientY;
+        adminCrop.startX = adminCrop.x;
+        adminCrop.startY = adminCrop.y;
+    }, { passive: true });
+    document.addEventListener('touchmove', function(e) {
+        if (!adminCrop.dragging) return;
+        var t = e.touches[0];
+        adminCrop.x = adminCrop.startX + (t.clientX - adminCrop.dragStartX);
+        adminCrop.y = adminCrop.startY + (t.clientY - adminCrop.dragStartY);
+        adminApplyCrop();
+    }, { passive: true });
+    document.addEventListener('touchend', function() { adminCrop.dragging = false; });
+})();
+
+// Mouse wheel zoom
+document.getElementById('adminCropViewport').addEventListener('wheel', function(e) {
+    e.preventDefault();
+    adminZoomCrop(e.deltaY > 0 ? -0.05 : 0.05);
+}, { passive: false });
+
+function adminConfirmCrop() {
+    if (!adminCrop.img) return;
+    var btn = event.target;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+    var canvas = document.createElement('canvas');
+    canvas.width = VP_SIZE;
+    canvas.height = VP_SIZE;
+    var ctx = canvas.getContext('2d');
+    var sx = -adminCrop.x / adminCrop.zoom;
+    var sy = -adminCrop.y / adminCrop.zoom;
+    var sw = VP_SIZE / adminCrop.zoom;
+    var sh = VP_SIZE / adminCrop.zoom;
+    ctx.drawImage(adminCrop.img, sx, sy, sw, sh, 0, 0, VP_SIZE, VP_SIZE);
+    var dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+
+    var userName = document.getElementById('UserName').value;
+    fetch('/api/upload-avatar-admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ avatarBase64: dataUrl, userName: userName })
+    }).then(function(r) {
+        return r.json();
+    }).then(function(res) {
+        if (res.success) {
+            if (res.url) {
+                document.getElementById('adminAvatarUrlInput').value = res.url;
+            }
+            document.getElementById('adminCropArea').style.display = 'none';
+            var prev = document.getElementById('adminAvatarPreview');
+            prev.innerHTML = '<img src="' + (res.url || '') + '?t=' + Date.now() + '" alt="Avatar" style="width:100%;height:100%;object-fit:cover;" />';
+        } else {
+            alert('Lỗi: ' + (res.error || 'Không xác định'));
+        }
+    }).catch(function(err) {
+        alert('Lỗi tải ảnh lên: ' + err.message);
+    }).finally(function() {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-check-lg"></i> Cắt & dùng';
+    });
+}
+
+function adminUseUrl() {
+    var url = document.getElementById('adminUrlInput').value.trim();
+    if (!url) return;
+    document.getElementById('adminAvatarUrlInput').value = url;
+    document.getElementById('adminAvatarUploaded').value = 'url';
+    document.getElementById('adminCropArea').style.display = 'none';
+    var prev = document.getElementById('adminAvatarPreview');
+    prev.innerHTML = '<img src="' + url + '?t=' + Date.now() + '" alt="Avatar" style="width:100%;height:100%;object-fit:cover;" />';
+}
+</script>
+}

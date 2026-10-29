@@ -1,0 +1,60 @@
+@page
+@model CarProject.Pages.Admin.KhuyenMai.CreateModel
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6">
+            <h2>Thêm Khuyến Mãi</h2>
+            <form method="post">
+                <div class="mb-3">
+                    <label asp-for="KhuyenMai.MaKhuyenMai" class="form-label">Mã Khuyến Mãi</label>
+                    <input asp-for="KhuyenMai.MaKhuyenMai" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                    <label asp-for="KhuyenMai.TieuDe" class="form-label">Tiêu Đề</label>
+                    <input asp-for="KhuyenMai.TieuDe" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                    <label asp-for="KhuyenMai.MoTa" class="form-label">Mô Tả</label>
+                    <textarea asp-for="KhuyenMai.MoTa" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="KhuyenMai.LoaiGiamGia" class="form-label">Loại Giảm Giá</label>
+                    <select asp-for="KhuyenMai.LoaiGiamGia" class="form-select" required>
+                        <option value="">-- Chọn loại --</option>
+                        <option value="Phần trăm">Phần trăm</option>
+                        <option value="Số tiền cố định">Số tiền cố định</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="KhuyenMai.GiaTriGiam" class="form-label">Giá Trị Giảm</label>
+                    <input asp-for="KhuyenMai.GiaTriGiam" class="form-control" type="number" step="0.01" required />
+                </div>
+                <div class="mb-3">
+                    <label asp-for="KhuyenMai.MucGiamToiDa" class="form-label">Mức Giảm Tối Đa</label>
+                    <input asp-for="KhuyenMai.MucGiamToiDa" class="form-control" type="number" step="0.01" required />
+                </div>
+                <div class="mb-3">
+                    <label asp-for="KhuyenMai.NgayBatDau" class="form-label">Ngày Bắt Đầu</label>
+                    <input asp-for="KhuyenMai.NgayBatDau" class="form-control" type="date" required />
+                </div>
+                <div class="mb-3">
+                    <label asp-for="KhuyenMai.NgayKetThuc" class="form-label">Ngày Kết Thúc</label>
+                    <input asp-for="KhuyenMai.NgayKetThuc" class="form-control" type="date" required />
+                </div>
+                <div class="mb-3">
+                    <label asp-for="KhuyenMai.TrangThai" class="form-label">Trạng Thái</label>
+                    <select asp-for="KhuyenMai.TrangThai" class="form-select" required>
+                        <option value="Hiệu lực">Hiệu lực</option>
+                        <option value="Hết hạn">Hết hạn</option>
+                        <option value="Tạm dừng">Tạm dừng</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <button type="submit" class="btn btn-primary">Thêm</button>
+                    <a asp-page="Index" class="btn btn-secondary">Hủy</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

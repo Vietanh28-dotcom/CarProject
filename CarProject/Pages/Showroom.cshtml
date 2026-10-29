@@ -1,0 +1,185 @@
+@page
+@model CarProject.Pages.ShowroomModel
+
+@{
+    ViewData["Title"] = "Hệ thống Showroom - MyLxCar";
+    var carBgList = new List<string> { "#050505", "#0a0a0a", "#0f0f0f", "#080808", "#070707", "#0c0c0c" };
+}
+
+<div class="listing-page">
+    <div class="container py-4">
+        <nav class="breadcrumb-premium">
+            <a asp-page="/Index"><i class="fas fa-home"></i> Trang chủ</a>
+            <span>/</span>
+            <span>Hệ thống Showroom</span>
+        </nav>
+
+        <div class="text-center mb-5">
+            <h1 class="fw-bold" style="font-family: var(--font-title);">Hệ thống Showroom</h1>
+            <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto;">Hệ thống showroom MyLxCar trên toàn quốc. Đến với chúng tôi để trải nghiệm các dòng xe đẳng cấp nhất.</p>
+        </div>
+
+        <!-- Showroom Locations -->
+        <h3 class="mb-4 reveal"><i class="fas fa-map-marker-alt me-2" style="color: var(--brand-silver);"></i> Danh sách Showroom</h3>
+        <div class="row g-4 mb-5">
+            @if (!Model.ChiNhanhList.Any())
+            {
+                <div class="col-12">
+                    <div class="text-center py-5" style="background: var(--brand-gray); border-radius: var(--radius);">
+                        <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"><i class="fas fa-store"></i></div>
+                        <p style="color: var(--text-muted);">Chưa có showroom nào.</p>
+                    </div>
+                </div>
+            }
+            @foreach (var cn in Model.ChiNhanhList)
+            {
+                <div class="col-md-6 reveal">
+                    <div class="car-card-premium" style="animation: none;">
+                        <div class="card-body" style="padding: 1.5rem;">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="mb-0">@cn.TenChiNhanh</h5>
+                                <span class="badge" style="background: rgba(192,192,192,0.15); color: var(--brand-silver); font-size: 0.65rem; padding: 0.25rem 0.75rem; border-radius: 50px;">
+                                    @cn.MaChiNhanh
+                                </span>
+                            </div>
+                            <div style="color: var(--text-secondary); font-size: 0.85rem;">
+                                <p class="mb-2"><i class="fas fa-map-pin me-2" style="width: 16px; color: var(--brand-silver);"></i> @cn.DiaChi</p>
+                                <p class="mb-2"><i class="fas fa-city me-2" style="width: 16px; color: var(--brand-silver);"></i> @cn.ThanhPho</p>
+                                <p class="mb-2"><i class="fas fa-phone-alt me-2" style="width: 16px; color: var(--brand-silver);"></i> @cn.DuongDayNong</p>
+                                <p class="mb-0"><i class="fas fa-user-tie me-2" style="width: 16px; color: var(--brand-silver);"></i> Quản lý: @(cn.QuanLy?.TenHienThi ?? cn.MaQuanLy)</p>
+                            </div>
+                            <div class="mt-3">
+                                <span class="badge" style="background: @(cn.TrangThai == "Hoạt động" ? "rgba(40,167,69,0.2)" : "rgba(255,193,7,0.2)"); color: @(cn.TrangThai == "Hoạt động" ? "#28a745" : "#ffc107"); font-size: 0.7rem; padding: 0.3rem 0.8rem; border-radius: 50px;">
+                                    <i class="fas fa-circle me-1" style="font-size: 0.4rem;"></i> @cn.TrangThai
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Car Inventory -->
+        <h3 class="mb-4 reveal"><i class="fas fa-warehouse me-2" style="color: var(--brand-silver);"></i> Xe hiện có</h3>
+        @if (!Model.HangXeList.Any())
+        {
+            <div class="text-center py-5" style="background: var(--brand-gray); border-radius: var(--radius);">
+                <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"><i class="fas fa-car"></i></div>
+                <p style="color: var(--text-muted);">Chưa có xe nào trong hệ thống.</p>
+            </div>
+        }
+        @foreach (var hang in Model.HangXeList)
+        {
+            var dongXeList = Model.DongXeByHang.GetValueOrDefault(hang.MaHang, new());
+            <div class="mb-5 reveal">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <h4 class="mb-0">@hang.TenHang</h4>
+                    <span class="badge" style="background: rgba(192,192,192,0.1); color: var(--brand-silver); font-size: 0.65rem; padding: 0.2rem 0.6rem; border-radius: 50px;">@hang.QuocGia</span>
+                </div>
+                @if (!dongXeList.Any())
+                {
+                    <p style="color: var(--text-faint); font-size: 0.85rem;">Chưa có dòng xe nào.</p>
+                }
+                else
+                {
+                    <div class="row g-3">
+                        @foreach (var dong in dongXeList)
+                        {
+                            var bg = carBgList[dong.MaDong % carBgList.Count];
+                            var phienBanList = Model.PhienBanByDong.GetValueOrDefault(dong.MaDong, new());
+                            var totalStock = phienBanList.Sum(p => p.SoLuongTrongKho);
+                            var carImg = dong.DuongDanAnh ?? hang.DuongDanLogo;
+                            var carPriceText = phienBanList.Count > 0
+                                ? (phienBanList.Min(p => p.GiaNiemYet) == phienBanList.Max(p => p.GiaNiemYet)
+                                    ? $"{phienBanList.Min(p => p.GiaNiemYet):N0}đ"
+                                    : $"{phienBanList.Min(p => p.GiaNiemYet):N0}đ - {phienBanList.Max(p => p.GiaNiemYet):N0}đ")
+                                : "Liên hệ";
+                            var versionsJson = System.Text.Json.JsonSerializer.Serialize(
+                                phienBanList.Select(p => new { p.TenPhienBan, p.GiaNiemYet, p.SoLuongTrongKho }));
+                            var showroomGroups = (phienBanList ?? new List<PhienBanXe>())
+                                .SelectMany(p => Model.TonKhoTheoPhienBan.TryGetValue(p.MaPhienBan, out var tl) ? tl : new List<TonKhoTheoChiNhanh>())
+                                .GroupBy(t => t.MaChiNhanh)
+                                .Select(g => new
+                                {
+                                    g.Key,
+                                    SoLuong = g.Sum(x => x.SoLuong),
+                                    Ten = Model.TenChiNhanhLut.TryGetValue(g.Key, out var tn) ? tn : g.Key,
+                                    PhienBans = g.GroupBy(x => x.MaPhienBan)
+                                        .Select(pg => new
+                                        {
+                                            TenPhienBan = phienBanList.FirstOrDefault(p => p.MaPhienBan == pg.Key)?.TenPhienBan ?? pg.Key.ToString(),
+                                            SoLuong = pg.Sum(x => x.SoLuong)
+                                        })
+                                        .OrderByDescending(x => x.SoLuong)
+                                        .ToList()
+                                })
+                                .OrderByDescending(x => x.SoLuong)
+                                .ToList();
+                            var showroomJson = System.Text.Json.JsonSerializer.Serialize(showroomGroups);
+                            <div class="col-md-4">
+                                <div class="car-card-premium" style="animation: none;"
+                                     data-car-name="@dong.TenDong"
+                                     data-car-brand="@hang.TenHang"
+                                     data-car-style="@dong.KieuDang"
+                                     data-car-country="@hang.QuocGia"
+                                     data-car-price="@carPriceText"
+                                     data-car-stock="@(totalStock <= 0 ? "out" : totalStock <= 5 ? "low" : "in")"
+                                     data-car-stock-text="@(totalStock <= 0 ? "Hết hàng" : totalStock <= 5 ? "Sắp hết" : "Còn hàng")"
+                                     data-car-img="@(string.IsNullOrEmpty(carImg) ? "" : carImg)"
+                                     data-car-count="@phienBanList.Count"
+                                     data-car-versions="@versionsJson"
+                                     data-car-showrooms="@showroomJson"
+                                     data-car-detail="/Details/@dong.MaDong">
+                            <div class="card-image" onclick="location.href='/Details/@dong.MaDong'" style="cursor:pointer;background:@(string.IsNullOrEmpty(carImg) ? "var(--brand-dark)" : $"url('{carImg}?v={DateTime.Now.Ticks}') center/cover");">
+                                @if (string.IsNullOrEmpty(carImg))
+                                {
+                                    <span class="car-icon" style="font-size: 2rem;">🚗</span>
+                                }
+                                <span class="brand-tag">@dong.KieuDang</span>
+                            </div>
+                                    <div class="card-body" style="padding: 1rem;">
+                                        <h5 class="mb-1" style="font-size: 0.95rem;">@dong.TenDong</h5>
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span style="color: var(--text-muted); font-size: 0.75rem;">
+                                                <i class="fas fa-cubes me-1"></i> Tồn kho: <strong style="color: var(--brand-white);">@totalStock</strong>
+                                            </span>
+                                            <span style="color: var(--text-faint); font-size: 0.7rem;">@phienBanList.Count phiên bản</span>
+                                        </div>
+                                        @if (phienBanList.Any())
+                                        {
+                                            <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 0.5rem;">
+                                                @foreach (var pb in phienBanList.Take(3))
+                                                {
+                                                    <div class="d-flex justify-content-between align-items-center mb-1" style="font-size: 0.75rem;">
+                                                        <span style="color: var(--text-secondary);">@pb.TenPhienBan</span>
+                                                        <div>
+                                                            <span style="color: var(--brand-silver);">@pb.GiaNiemYet.ToString("N0") đ</span>
+                                                            <span class="ms-2" style="color: @(pb.SoLuongTrongKho > 5 ? "#28a745" : pb.SoLuongTrongKho > 0 ? "#ffc107" : "#dc3545"); font-weight: 600;">@pb.SoLuongTrongKho</span>
+                                                        </div>
+                                                    </div>
+                                                }
+                                                @if (phienBanList.Count > 3)
+                                                {
+                                                    <div style="font-size: 0.7rem; color: var(--text-faint); text-align: center; margin-top: 0.25rem;">
+                                                        + @(phienBanList.Count - 3) phiên bản khác
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
+                                        <a asp-page="/Details" asp-route-id="@dong.MaDong" class="btn-detail mt-2" style="font-size: 0.75rem;">
+                                            Chi tiết <i class="fas fa-chevron-right ms-1" style="font-size: 0.5rem;"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/car-hover-preview.js" asp-append-version="true"></script>
+}

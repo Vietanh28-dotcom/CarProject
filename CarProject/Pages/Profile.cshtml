@@ -1,0 +1,454 @@
+@page
+@model ProfileModel
+
+@{
+    ViewData["Title"] = "Tài khoản của tôi";
+    var isLoggedIn = User.IsJwtLoggedIn();
+    var userName = User.GetJwtDisplayName() ?? User.GetJwtUserName() ?? "Người dùng";
+    var userEmail = User.GetJwtEmail();
+    var userRole = User.GetJwtRole();
+    var avatarUrl = User.GetJwtAvatar();
+    var maTaiKhoan = User.GetJwtMaTaiKhoan();
+    var isFirstTime = Request.Query["firstTime"] == "True";
+}
+
+@if (!isLoggedIn)
+{
+    <div class="auth-page">
+        <div class="container text-center">
+            <div style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.2;"><i class="fas fa-user-lock"></i></div>
+            <h2 style="color: var(--brand-white);">Vui lòng đăng nhập</h2>
+            <p style="color: var(--text-muted); margin-bottom: 2rem;">Bạn cần đăng nhập để xem trang này.</p>
+            <a asp-page="/Account/Login" class="btn-premium btn-premium-solid">
+                <i class="fas fa-sign-in-alt me-2"></i> Đăng nhập
+            </a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="profile-page">
+        <div class="profile-header">
+            <div class="container">
+                <div class="d-flex align-items-center gap-4 flex-wrap">
+                    <div class="profile-avatar" style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 2px solid var(--brand-silver); display: flex; align-items: center; justify-content: center; background: var(--brand-light-gray);">
+                        @if (!string.IsNullOrEmpty(avatarUrl))
+                        {
+                            <img src="@avatarUrl?v=@DateTime.Now.Ticks" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;" />
+                        }
+                        else
+                        {
+                            <i class="fas fa-user" style="font-size: 2rem; color: var(--brand-silver);"></i>
+                        }
+                    </div>
+                    <div>
+                        <div class="profile-name">@userName</div>
+                        <div class="profile-role"><i class="fas fa-tag me-1"></i> @userRole</div>
+                        @if (!string.IsNullOrEmpty(userEmail))
+                        {
+                            <div class="profile-role"><i class="far fa-envelope me-1"></i> @userEmail</div>
+                        }
+                        @if (maTaiKhoan.HasValue)
+                        {
+                            <div class="profile-role"><i class="fas fa-hashtag me-1"></i> ID: @maTaiKhoan</div>
+                        }
+                    </div>
+                    <div class="ms-auto d-flex gap-4">
+                        <div class="profile-stat">
+                            <div class="num">@Model.SoDonCoc</div>
+                            <div class="label">Đơn cọc</div>
+                        </div>
+                        <div class="profile-stat">
+                            <div class="num">@Model.SoLichHen</div>
+                            <div class="label">Lịch hẹn</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container py-4">
+            @if (isFirstTime)
+            {
+                <div style="background: linear-gradient(135deg, rgba(0,51,102,0.3), rgba(0,0,0,0.5)); border: 1px solid var(--brand-silver); padding: 1.5rem; margin-bottom: 1.5rem; text-align: center;">
+                    <h4 style="color: var(--brand-white); font-family: var(--font-title); font-weight: 700;">Chào mừng bạn!</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem;">Hãy đặt tên hiển thị để bạn bè dễ nhận ra bạn trên hệ thống.</p>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(Model.Message))
+            {
+                <div style="padding: 0.75rem 1rem; margin-bottom: 1.5rem; font-size: 0.85rem; border-radius: 4px;
+                    background: @(Model.MessageType == "success" ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)");
+                    border: 1px solid @(Model.MessageType == "success" ? "rgba(34,197,94,0.3)" : "rgba(239,68,68,0.3)");
+                    color: @(Model.MessageType == "success" ? "#22c55e" : "#ef4444");">
+                    @Model.Message
+                </div>
+            }
+
+            <div class="row g-4">
+                <!-- Account Settings -->
+                <div class="col-lg-4">
+                    <div class="glass-card" style="padding: 1.5rem;">
+                        <h5 style="font-family: var(--font-title); font-size: 0.85rem; font-weight: 700; color: var(--brand-white); margin-bottom: 1rem; letter-spacing: 1px; text-transform: uppercase;">
+                            <i class="fas fa-cog me-2"></i> Cài đặt tài khoản
+                        </h5>
+
+                        <!-- Avatar Upload with Crop -->
+                        <div style="margin-bottom: 1.5rem;">
+                            <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 1px;">Ảnh đại diện</label>
+                            <div class="d-flex align-items-center gap-3">
+                                <div id="avatarPreview" style="width: 60px; height: 60px; border-radius: 50%; overflow: hidden; border: 2px solid var(--brand-silver); display: flex; align-items: center; justify-content: center; background: var(--brand-light-gray); flex-shrink: 0;">
+                                    @if (!string.IsNullOrEmpty(avatarUrl))
+                                    {
+                                        <img src="@avatarUrl?v=@DateTime.Now.Ticks" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;" />
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-user" style="font-size: 1.5rem; color: var(--brand-silver);"></i>
+                                    }
+                                </div>
+                                <div>
+                                    <input type="file" id="avatarInput" accept="image/*" style="font-size: 0.78rem; color: var(--text-secondary); max-width: 140px;" />
+                                </div>
+                            </div>
+                        </div>
+                        @Html.AntiForgeryToken()
+
+                        <!-- Display Name -->
+                        <form method="post" asp-page-handler="UpdateName" style="margin-bottom: 1.5rem;">
+                            <label asp-for="NewTenHienThi" style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 1px;">Tên hiển thị</label>
+                            <div class="d-flex gap-2">
+                                <input asp-for="NewTenHienThi" class="form-control" value="@userName" style="background: var(--brand-light-gray); border: 1px solid rgba(255,255,255,0.08); color: var(--brand-white); font-size: 0.85rem; flex: 1;" />
+                                <button type="submit" class="btn-premium btn-premium-solid" style="padding: 0.35rem 1rem; font-size: 0.65rem;">
+                                    <i class="fas fa-save me-1"></i> Lưu
+                                </button>
+                            </div>
+                        </form>
+
+                        <!-- Change Password -->
+                        <form method="post" asp-page-handler="ChangePassword">
+                            <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 1px;">Đổi mật khẩu</label>
+                            <div class="mb-2">
+                                <input asp-for="MatKhauCu" type="password" class="form-control" placeholder="Mật khẩu cũ" style="background: var(--brand-light-gray); border: 1px solid rgba(255,255,255,0.08); color: var(--brand-white); font-size: 0.82rem;" />
+                            </div>
+                            <div class="mb-2">
+                                <input asp-for="MatKhauMoi" type="password" class="form-control" placeholder="Mật khẩu mới (6+ ký tự)" style="background: var(--brand-light-gray); border: 1px solid rgba(255,255,255,0.08); color: var(--brand-white); font-size: 0.82rem;" />
+                            </div>
+                            <div class="mb-2">
+                                <input asp-for="XacNhanMatKhau" type="password" class="form-control" placeholder="Xác nhận mật khẩu mới" style="background: var(--brand-light-gray); border: 1px solid rgba(255,255,255,0.08); color: var(--brand-white); font-size: 0.82rem;" />
+                            </div>
+                            <button type="submit" class="btn-premium btn-premium-outline" style="padding: 0.4rem 1.2rem; font-size: 0.7rem; width: 100%;">
+                                <i class="fas fa-key me-1"></i> Đổi mật khẩu
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Deposits -->
+                <div class="col-lg-4" id="deposits">
+                    <div class="glass-card" style="padding: 1.5rem;">
+                        <h5 style="font-family: var(--font-title); font-size: 0.85rem; font-weight: 700; color: var(--brand-white); margin-bottom: 1rem; letter-spacing: 1px; text-transform: uppercase;">
+                            <i class="fas fa-credit-card me-2"></i> Đơn đặt cọc
+                        </h5>
+                        @if (!Model.DonDatCocList.Any())
+                        {
+                            <p style="color: var(--text-muted); font-size: 0.85rem;">Chưa có đơn cọc nào.</p>
+                        }
+                        @foreach (var d in Model.DonDatCocList)
+                        {
+                            var danhSachXe = d.ChiTiets.Any()
+                                ? string.Join(", ", d.ChiTiets.Select(c =>
+                                    $"{c.PhienBan?.DongXe?.TenDong ?? ""} {c.PhienBan?.TenPhienBan ?? ""}".Trim() + (c.SoLuong > 1 ? $" x{c.SoLuong}" : "")))
+                                : $"{d.PhienBan?.DongXe?.TenDong ?? ""} {d.PhienBan?.TenPhienBan ?? ""}".Trim();
+                            var giaNiemYet = d.ChiTiets.Sum(c => (c.PhienBan?.GiaNiemYet ?? 0) * c.SoLuong) > 0
+                                ? d.ChiTiets.Sum(c => (c.PhienBan?.GiaNiemYet ?? 0) * c.SoLuong)
+                                : (d.PhienBan?.GiaNiemYet ?? 0);
+                            var giaNiemYetStr = giaNiemYet >= 1_000_000_000
+                                ? $"{giaNiemYet / 1_000_000_000m:N1} tỷ VNĐ"
+                                : $"{giaNiemYet / 1_000_000:N0} triệu VNĐ";
+                            var soTienCocStr = d.SoTienCoc >= 1_000_000_000
+                                ? $"{d.SoTienCoc / 1_000_000_000m:N1} tỷ VNĐ"
+                                : $"{d.SoTienCoc / 1_000_000:N0} triệu VNĐ";
+                            <div style="background: var(--brand-light-gray); border: 1px solid rgba(255,255,255,0.05); padding: 1rem; margin-bottom: 0.75rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-family: var(--font-title); font-weight: 600; color: var(--brand-white); font-size:0.82rem;">@danhSachXe</span>
+                                    <span style="font-size: 0.7rem; color: var(--text-muted);">@d.NgayTaoDon.ToString("dd/MM/yyyy HH:mm")</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-top: 0.3rem; font-size: 0.75rem;">
+                                    <span style="color: var(--text-muted);">Tiền cọc: <strong style="color: var(--brand-gold);">@soTienCocStr</strong></span>
+                                    <span style="color: var(--text-muted);">Giá gốc: <strong style="color: var(--brand-white);">@giaNiemYetStr</strong></span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.3rem; font-size: 0.75rem;">
+                                    <span style="color: var(--text-faint);">
+                                        <i class="fas fa-map-marker-alt me-1" style="color: var(--brand-gold);"></i> @(d.ChiNhanh?.TenChiNhanh ?? "Chưa xác định")
+                                    </span>
+                                    <span>
+                                        @switch (d.TrangThaiDonHang)
+                                        {
+                                            case "Chờ xử lý":
+                                            case "Chờ xác nhận":
+                                            case "Chờ thanh toán":
+                                                <span class="badge bg-warning text-dark">Chờ xác nhận</span>
+                                                break;
+                                            case "Đã duyệt":
+                                            case "Đã xác nhận":
+                                            case "Hoàn tất":
+                                            case "Đã thanh toán":
+                                            case "Đã đặt cọc":
+                                                <span class="badge bg-success">Đã đặt cọc</span>
+                                                break;
+                                            case "Đã từ chối":
+                                            case "Đã hủy":
+                                                <span class="badge bg-danger">@d.TrangThaiDonHang</span>
+                                                break;
+                                            default:
+                                                <span class="badge bg-secondary">@d.TrangThaiDonHang</span>
+                                                break;
+                                        }
+                                    </span>
+                                </div>
+                                <div style="margin-top: 0.5rem; text-align: right;">
+                                    <a asp-page="/Orders/DepositResult" asp-route-maDonCoc="@d.MaDonCoc" class="btn-premium btn-premium-outline" style="padding: 0.25rem 0.8rem; font-size: 0.65rem; display: inline-flex;">
+                                        <i class="fas fa-eye me-1"></i> Xem chi tiết
+                                    </a>
+                                </div>
+                            </div>
+                        }
+                        <div class="mt-3">
+                            <a asp-page="/Orders/DepositForm" class="btn-premium btn-premium-solid" style="padding: 0.5rem 1.5rem; font-size: 0.65rem;">
+                                <i class="fas fa-plus me-1"></i> Đặt cọc mới
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Test Drives -->
+                <div class="col-lg-4">
+                    <div class="glass-card" style="padding: 1.5rem;">
+                        <h5 style="font-family: var(--font-title); font-size: 0.85rem; font-weight: 700; color: var(--brand-white); margin-bottom: 1rem; letter-spacing: 1px; text-transform: uppercase;">
+                            <i class="fas fa-calendar-check me-2"></i> Lịch lái thử
+                        </h5>
+                        @if (!Model.LichHenList.Any())
+                        {
+                            <p style="color: var(--text-muted); font-size: 0.85rem;">Chưa có lịch hẹn nào.</p>
+                        }
+                        @foreach (var l in Model.LichHenList)
+                        {
+                            <div style="background: var(--brand-light-gray); border: 1px solid rgba(255,255,255,0.05); padding: 1rem; margin-bottom: 0.75rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-family: var(--font-title); font-weight: 600; color: var(--brand-white);">@l.DongXe?.TenDong</span>
+                                    <span style="font-size: 0.7rem; color: var(--text-muted);">@(l.NgayHen?.ToString("dd/MM/yyyy") ?? "Chưa chốt")</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; font-size: 0.82rem;">
+                                    <span style="color: var(--text-muted);">@l.GioHen</span>
+                                    <span style="color: var(--brand-silver);">@l.TrangThai</span>
+                                </div>
+                            </div>
+                        }
+                        <div class="mt-3">
+                            <a asp-page="/TestDrive" class="btn-premium btn-premium-solid" style="padding: 0.5rem 1.5rem; font-size: 0.65rem;">
+                                <i class="fas fa-plus me-1"></i> Đặt lịch mới
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Crop Modal -->
+    <div class="crop-overlay" id="cropOverlay" style="display:none;" onclick="if(event.target===this)closeCrop()">
+        <div class="crop-modal">
+            <div class="crop-modal-header">
+                <h5><i class="fas fa-crop-alt me-2"></i>Cắt ảnh đại diện</h5>
+                <button type="button" class="crop-close" onclick="closeCrop()">&times;</button>
+            </div>
+            <div class="crop-body">
+                <div class="crop-viewport-wrap">
+                    <div class="crop-viewport" id="cropViewport">
+                        <img id="cropImage" src="" alt="Drag to adjust" />
+                        <div class="crop-grid"></div>
+                    </div>
+                </div>
+                <div class="crop-toolbar">
+                    <button type="button" class="crop-tool-btn" onclick="zoomCrop(-0.1)" title="Thu nhỏ"><i class="fas fa-search-minus"></i></button>
+                    <div class="crop-zoom-level" id="cropZoomLevel">100%</div>
+                    <button type="button" class="crop-tool-btn" onclick="zoomCrop(0.1)" title="Phóng to"><i class="fas fa-search-plus"></i></button>
+                    <button type="button" class="crop-tool-btn" onclick="resetCrop()" title="Đặt lại"><i class="fas fa-undo"></i></button>
+                </div>
+            </div>
+            <div class="crop-modal-footer">
+                <button type="button" class="btn-premium btn-premium-outline" style="padding:0.5rem 1.5rem;font-size:0.7rem;" onclick="closeCrop()">Hủy</button>
+                <button type="button" class="btn-premium btn-premium-solid" style="padding:0.5rem 1.5rem;font-size:0.7rem;" onclick="cropAndUpload(event)">
+                    <i class="fas fa-check me-1"></i> Cắt & Lưu
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+<script>
+let cropState = { img: null, x: 0, y: 0, zoom: 1, baseW: 0, baseH: 0, dragging: false, dragStartX: 0, dragStartY: 0, startX: 0, startY: 0 };
+
+document.getElementById('avatarInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!['image/jpeg','image/png','image/gif','image/webp'].includes(file.type)) {
+        alert('Chỉ chấp nhận file ảnh (JPEG, PNG, GIF, WebP).');
+        this.value = '';
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+        openCrop(ev.target.result);
+    };
+    reader.readAsDataURL(file);
+    this.value = '';
+});
+
+function openCrop(src) {
+    const img = new Image();
+    img.onload = function() {
+        cropState.img = img;
+        cropState.baseW = img.naturalWidth;
+        cropState.baseH = img.naturalHeight;
+        resetCrop();
+        document.getElementById('cropImage').src = src;
+        document.getElementById('cropOverlay').style.display = 'flex';
+    };
+    img.src = src;
+}
+
+function closeCrop() {
+    document.getElementById('cropOverlay').style.display = 'none';
+}
+
+function resetCrop() {
+    const vp = 250;
+    const scale = Math.max(vp / cropState.baseW, vp / cropState.baseH);
+    cropState.zoom = scale;
+    cropState.x = (vp - cropState.baseW * scale) / 2;
+    cropState.y = (vp - cropState.baseH * scale) / 2;
+    applyCropTransform();
+}
+
+function zoomCrop(delta) {
+    const vp = 250;
+    const oldZoom = cropState.zoom;
+    const newZoom = Math.max(0.2, Math.min(5, oldZoom + delta));
+    if (newZoom === oldZoom) return;
+    const cx = vp / 2, cy = vp / 2;
+    cropState.x = cx - (cx - cropState.x) * (newZoom / oldZoom);
+    cropState.y = cy - (cy - cropState.y) * (newZoom / oldZoom);
+    cropState.zoom = newZoom;
+    applyCropTransform();
+}
+
+function applyCropTransform() {
+    const img = document.getElementById('cropImage');
+    img.style.transform = 'translate(' + cropState.x + 'px, ' + cropState.y + 'px) scale(' + cropState.zoom + ')';
+    document.getElementById('cropZoomLevel').textContent = Math.round(cropState.zoom * 100) + '%';
+}
+
+// Drag
+(function() {
+    const vp = document.getElementById('cropViewport');
+    vp.addEventListener('mousedown', function(e) {
+        if (e.target.tagName === 'BUTTON') return;
+        cropState.dragging = true;
+        cropState.dragStartX = e.clientX;
+        cropState.dragStartY = e.clientY;
+        cropState.startX = cropState.x;
+        cropState.startY = cropState.y;
+        vp.style.cursor = 'grabbing';
+    });
+    document.addEventListener('mousemove', function(e) {
+        if (!cropState.dragging) return;
+        cropState.x = cropState.startX + (e.clientX - cropState.dragStartX);
+        cropState.y = cropState.startY + (e.clientY - cropState.dragStartY);
+        applyCropTransform();
+    });
+    document.addEventListener('mouseup', function() {
+        if (!cropState.dragging) return;
+        cropState.dragging = false;
+        vp.style.cursor = 'grab';
+    });
+    // Touch
+    vp.addEventListener('touchstart', function(e) {
+        if (e.target.tagName === 'BUTTON') return;
+        const t = e.touches[0];
+        cropState.dragging = true;
+        cropState.dragStartX = t.clientX;
+        cropState.dragStartY = t.clientY;
+        cropState.startX = cropState.x;
+        cropState.startY = cropState.y;
+    }, { passive: true });
+    document.addEventListener('touchmove', function(e) {
+        if (!cropState.dragging) return;
+        const t = e.touches[0];
+        cropState.x = cropState.startX + (t.clientX - cropState.dragStartX);
+        cropState.y = cropState.startY + (t.clientY - cropState.dragStartY);
+        applyCropTransform();
+    }, { passive: true });
+    document.addEventListener('touchend', function() {
+        cropState.dragging = false;
+    });
+})();
+
+// Mouse wheel zoom
+document.getElementById('cropViewport').addEventListener('wheel', function(e) {
+    e.preventDefault();
+    zoomCrop(e.deltaY > 0 ? -0.05 : 0.05);
+}, { passive: false });
+
+function cropAndUpload(e) {
+    const btn = (e && e.target) ? (e.target.closest('button') || e.target) : document.querySelector('.crop-modal-footer .btn-premium-solid');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Đang xử lý...';
+
+    const vp = 250;
+    const canvas = document.createElement('canvas');
+    canvas.width = vp;
+    canvas.height = vp;
+    const ctx = canvas.getContext('2d');
+
+    const sx = -cropState.x / cropState.zoom;
+    const sy = -cropState.y / cropState.zoom;
+    const sw = vp / cropState.zoom;
+    const sh = vp / cropState.zoom;
+
+    ctx.drawImage(cropState.img, sx, sy, sw, sh, 0, 0, vp, vp);
+
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+    fetch('/api/upload-avatar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ avatarBase64: dataUrl })
+    })
+    .then(function(r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+    })
+    .then(function(data) {
+        if (!data.success) throw new Error(data.error || 'Lỗi không xác định');
+        const t = new Date().getTime();
+        document.querySelector('#avatarPreview img')?.remove();
+        const prev = document.getElementById('avatarPreview');
+        const user = '@User.GetJwtUserName()';
+        prev.innerHTML = '<img src="/uploads/avatars/' + user + '.jpg?v=' + t + '" alt="Avatar" style="width:100%;height:100%;object-fit:cover;" />';
+        const navAvatar = document.querySelector('.navbar-avatar-img');
+        if (navAvatar) navAvatar.src = '/uploads/avatars/' + user + '.jpg?v=' + t;
+        closeCrop();
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check me-1"></i> Cắt & Lưu';
+    })
+    .catch(function(err) {
+        alert('Lỗi tải ảnh lên: ' + (err.message || 'Không thể kết nối đến máy chủ'));
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check me-1"></i> Cắt & Lưu';
+    });
+}
+</script>
+}

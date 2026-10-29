@@ -1,0 +1,35 @@
+@page "{id:int}"
+@model CarProject.Pages.Admin.PhienBan.DeleteModel
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6">
+            <h2>Xóa Phiên Bản Xe</h2>
+            @if (Model.PhienBan == null)
+            {
+                <div class="alert alert-danger">Không tìm thấy phiên bản xe.</div>
+            }
+            else
+            {
+                @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+                {
+                    <div class="alert alert-danger">@Model.ErrorMessage</div>
+                }
+                <div class="alert alert-warning">
+                    Bạn có chắc muốn xóa phiên bản <strong>@Model.PhienBan.TenPhienBan</strong>?
+                </div>
+                <dl class="row">
+                    <dt class="col-sm-4">Giá niêm yết</dt>
+                    <dd class="col-sm-8">@Model.PhienBan.GiaNiemYet.ToString("N0") VNĐ</dd>
+                    <dt class="col-sm-4">Số lượng kho</dt>
+                    <dd class="col-sm-8">@Model.PhienBan.SoLuongTrongKho</dd>
+                </dl>
+                <form method="post">
+                    <input type="hidden" asp-for="PhienBan.MaPhienBan" />
+                    <button type="submit" class="btn btn-danger">Xóa</button>
+                    <a asp-page="Index" class="btn btn-secondary">Hủy</a>
+                </form>
+            }
+        </div>
+    </div>
+</div>

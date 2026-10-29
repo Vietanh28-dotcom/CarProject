@@ -1,0 +1,115 @@
+@page
+@model ContactModel
+
+@{
+    ViewData["Title"] = "Liên hệ";
+}
+
+<div class="contact-page">
+    <!-- Hero -->
+    <div class="about-hero reveal">
+        <div style="position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(192,192,192,0.04) 0%, transparent 60%); pointer-events: none;"></div>
+        <div class="container position-relative">
+            <p class="section-label justify-content-center" style="margin-bottom: 1.5rem;">Liên hệ</p>
+            <h1>Liên hệ với chúng tôi</h1>
+            <p>Đội ngũ chuyên viên luôn sẵn sàng hỗ trợ bạn 24/7</p>
+        </div>
+    </div>
+
+    <section class="section-premium">
+        <div class="container">
+            <div class="row g-5">
+                <div class="col-lg-5 reveal">
+                    <p class="section-label">Thông tin</p>
+                    <h2 class="section-heading" style="font-size: 2rem; margin-bottom: 2rem;">Hệ thống Showroom</h2>
+
+                    <div class="contact-info-item mb-4">
+                        <div class="icon"><i class="fas fa-map-marker-alt"></i></div>
+                        <div>
+                            <h6>TP. Hồ Chí Minh</h6>
+                            <p>208 Nguyễn Hữu Cảnh, P. 22, Quận Bình Thạnh</p>
+                        </div>
+                    </div>
+                    <div class="contact-info-item mb-4">
+                        <div class="icon"><i class="fas fa-map-marker-alt"></i></div>
+                        <div>
+                            <h6>Hà Nội</h6>
+                            <p>Lô X7, Đường Lê Đức Thọ, Quận Nam Từ Liêm</p>
+                        </div>
+                    </div>
+                    <div class="contact-info-item mb-4">
+                        <div class="icon"><i class="fas fa-phone-alt"></i></div>
+                        <div>
+                            <h6>Hotline</h6>
+                            <p>1800 6886 (Miễn phí)</p>
+                        </div>
+                    </div>
+                    <div class="contact-info-item mb-4">
+                        <div class="icon"><i class="far fa-envelope"></i></div>
+                        <div>
+                            <h6>Email</h6>
+                            <p>contact@mylxcar.vn</p>
+                        </div>
+                    </div>
+                    <div class="contact-info-item">
+                        <div class="icon"><i class="far fa-clock"></i></div>
+                        <div>
+                            <h6>Giờ làm việc</h6>
+                            <p>Thứ 2 - Thứ 7: 8:00 - 18:00<br />Chủ nhật: 8:00 - 12:00</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-7">
+                    <div class="glass-card p-4 reveal">
+                        <h5 style="font-family: var(--font-title); font-weight: 700; color: var(--brand-white); margin-bottom: 1.5rem;">Gửi yêu cầu tư vấn</h5>
+
+                        @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+                        {
+                            <div style="background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); color: #22c55e; padding: 0.75rem 1rem; font-size: 0.85rem; margin-bottom: 1.5rem;">
+                                <i class="fas fa-check-circle me-1"></i> @Model.SuccessMessage
+                            </div>
+                        }
+
+                        <form method="post">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label asp-for="HoTen" class="form-label">Họ tên</label>
+                                    <input asp-for="HoTen" class="form-control" required placeholder="Nhập họ tên" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="Email" class="form-label">Email</label>
+                                    <input asp-for="Email" type="email" class="form-control" required placeholder="Nhập email" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="SoDienThoai" class="form-label">Số điện thoại</label>
+                                    <input asp-for="SoDienThoai" class="form-control" required placeholder="Nhập số điện thoại" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="ChuDe" class="form-label">Chủ đề</label>
+                                    <select asp-for="ChuDe" class="form-control">
+                                        <option value="Tư vấn mua xe">Tư vấn mua xe</option>
+                                        <option value="Đặt lịch lái thử">Đặt lịch lái thử</option>
+                                        <option value="Dịch vụ bảo dưỡng">Dịch vụ bảo dưỡng</option>
+                                        <option value="Khiếu nại">Khiếu nại</option>
+                                        <option value="Khác">Khác</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label asp-for="NoiDung" class="form-label">Nội dung</label>
+                                    <textarea asp-for="NoiDung" class="form-control" rows="5" required placeholder="Nhập nội dung yêu cầu..."></textarea>
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <button type="submit" class="btn-premium btn-premium-solid">
+                                    <i class="fas fa-paper-plane me-2"></i> Gửi yêu cầu
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>

@@ -1,0 +1,80 @@
+@page
+@model CarProject.Pages.Admin.KhuyenMai.IndexModel
+
+<div class="container-fluid db-wrap">
+    <div class="db-toolbar">
+        <div>
+            <h1 class="db-title">Quản lý Khuyến Mãi</h1>
+            <div class="db-subtitle">Tổng cộng @Model.KhuyenMaiList.Count chương trình · Dashboard quản trị</div>
+        </div>
+        <a asp-page="Create" class="db-btn-primary">
+            <i class="fas fa-plus me-1"></i> Thêm Khuyến Mãi
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">@TempData["Success"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">@TempData["Error"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    }
+
+    @if (Model.KhuyenMaiList.Count == 0)
+    {
+        <div class="alert alert-info">Không có khuyến mãi nào.</div>
+    }
+    else
+    {
+        <div class="db-card">
+            <div class="db-table-responsive">
+                <table class="db-table" style="min-width:1040px;">
+                    <colgroup>
+                        <col style="width:80px" />
+                        <col style="width:240px" />
+                        <col style="width:130px" />
+                        <col style="width:140px" />
+                        <col style="width:200px" />
+                        <col style="width:130px" />
+                        <col style="width:120px" />
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>Mã KM</th>
+                            <th>Tiêu Đề</th>
+                            <th>Loại Giảm</th>
+                            <th>Giá Trị</th>
+                            <th>Thời Gian</th>
+                            <th>Trạng Thái</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var km in Model.KhuyenMaiList)
+                        {
+                            var trangThaiCls = km.TrangThai == "Đang hoạt động" ? "green" : (km.TrangThai == "Hết hạn" ? "red" : (km.TrangThai == "Sắp diễn ra" ? "yellow" : "gray"));
+
+                            <tr>
+                                <td><span class="db-id">#@km.MaKhuyenMai</span></td>
+                                <td><div class="db-name">@km.TieuDe</div></td>
+                                <td><span class="db-badge gray">@km.LoaiGiamGia</span></td>
+                                <td><span class="db-money">@km.GiaTriGiam.ToString("N0")đ</span></td>
+                                <td>
+                                    <div class="db-2line">@km.NgayBatDau.ToString("dd/MM/yyyy")<small>đến @km.NgayKetThuc.ToString("dd/MM/yyyy")</small></div>
+                                </td>
+                                <td><span class="db-badge @trangThaiCls">@km.TrangThai</span></td>
+                                <td>
+                                    <div class="db-actions">
+                                        <a asp-page="Edit" asp-route-id="@km.MaKhuyenMai" class="db-act edit" title="Sửa"><i class="fas fa-edit"></i></a>
+                                        <a asp-page="Delete" asp-route-id="@km.MaKhuyenMai" class="db-act del" title="Xóa" onclick="return confirm('Xác nhận xóa?');"><i class="fas fa-trash-alt"></i></a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

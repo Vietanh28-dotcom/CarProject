@@ -1,0 +1,94 @@
+@page
+@model CarProject.Pages.Admin.ThongKe.IndexModel
+
+<div class="container-fluid db-wrap">
+    <div class="db-toolbar">
+        <div>
+            <h1 class="db-title">Quản lý Thống Kê Tổng Hợp</h1>
+            <div class="db-subtitle">Tổng cộng @Model.ThongKeList.Count thống kê · Dashboard quản trị</div>
+        </div>
+        <a asp-page="Create" class="db-btn-primary">
+            <i class="fas fa-plus me-1"></i> Thêm Thống Kê
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">@TempData["Success"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">@TempData["Error"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    }
+
+    @if (Model.ThongKeList.Count == 0)
+    {
+        <div class="alert alert-info">Không có thống kê nào.</div>
+    }
+    else
+    {
+        <div class="db-card">
+            <div class="db-table-responsive">
+                <table class="db-table" style="min-width:1240px;">
+                    <colgroup>
+                        <col style="width:80px" />
+                        <col style="width:110px" />
+                        <col style="width:190px" />
+                        <col style="width:150px" />
+                        <col style="width:150px" />
+                        <col style="width:90px" />
+                        <col style="width:90px" />
+                        <col style="width:90px" />
+                        <col style="width:170px" />
+                        <col style="width:120px" />
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>Mã TK</th>
+                            <th>Kỳ báo cáo</th>
+                            <th>Chi nhánh</th>
+                            <th>Doanh thu</th>
+                            <th>Tiền cọc thu về</th>
+                            <th>Xe đã bán</th>
+                            <th>Lượt xem</th>
+                            <th>Lượt lái thử</th>
+                            <th>Xe bán chạy</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var tk in Model.ThongKeList)
+                        {
+                            <tr>
+                                <td><span class="db-id">#@tk.MaThongKe</span></td>
+
+                                <td><div class="db-name">@tk.KyBaoCao</div></td>
+
+                                <td><div class="db-2line">@(tk.ChiNhanh?.TenChiNhanh ?? "—")</div></td>
+
+                                <td><span class="db-money">@tk.TongDoanhThu.ToString("N0")đ</span></td>
+
+                                <td><span class="db-money">@tk.TongTienCocThuVe.ToString("N0")đ</span></td>
+
+                                <td><div class="db-name">@tk.TongSoXeDaBan</div></td>
+
+                                <td><div class="db-name">@tk.TongLuotXemWeb</div></td>
+
+                                <td><div class="db-name">@tk.TongLuotLaiThu</div></td>
+
+                                <td><div class="db-name">@(tk.DongXeBanChay?.TenDong ?? "—")</div></td>
+
+                                <td>
+                                    <div class="db-actions">
+                                        <a asp-page="Edit" asp-route-id="@tk.MaThongKe" class="db-act edit" title="Sửa"><i class="fas fa-edit"></i></a>
+                                        <a asp-page="Delete" asp-route-id="@tk.MaThongKe" class="db-act del" title="Xóa" onclick="return confirm('Xác nhận xóa?');"><i class="fas fa-trash-alt"></i></a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

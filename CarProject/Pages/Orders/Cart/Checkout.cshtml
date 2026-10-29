@@ -1,0 +1,538 @@
+@page
+@model CarProject.Pages.Orders.Cart.CheckoutModel
+@{
+    ViewData["Title"] = "Xác nhận đặt cọc";
+    var cocRateText = (Model.CartItems.GroupBy(c => c.SoLuongTrongKho <= 0 ? "15%" : "20%").Count() == 1
+        ? Model.CartItems.Any(c => c.SoLuongTrongKho <= 0) ? "15%" : "20%"
+        : "15%/20%");
+}
+
+<div class="deposit-page">
+    <div class="container py-4">
+        <nav class="breadcrumb-premium mb-4">
+            <a asp-page="/Index"><i class="fas fa-home"></i> Trang chủ</a>
+            <span>/</span>
+            <a asp-page="/Orders/Cart/Index">Giỏ hàng</a>
+            <span>/</span>
+            <span>Xác nhận</span>
+        </nav>
+
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="deposit-card">
+                    <h4>Danh sách xe (@Model.CartItems.Count xe)</h4>
+                    <div style="max-height: 400px; overflow-y: auto; margin-top: 1rem;">
+                        @foreach (var item in Model.CartItems)
+                        {
+                            var isPreOrder = item.SoLuongTrongKho <= 0;
+                            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 0.8rem; margin-bottom: 0.5rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div style="flex:1;min-width:0;">
+                                        <div style="font-weight: 600; color: var(--brand-white); font-size: 0.9rem;">
+                                            @item.TenPhienBan
+                                            @if (isPreOrder)
+                                            {
+                                                <span style="font-size:0.65rem;background:rgba(168,85,247,0.15);color:#a855f7;padding:0.15rem 0.5rem;border-radius:50px;margin-left:0.5rem;">Đặt trước</span>
+                                            }
+                                        </div>
+                                        <div style="font-size: 0.75rem; color: var(--text-faint);">@item.TenDong - @item.MauSac</div>
+                                    </div>
+                                    <div style="text-align:right;flex-shrink:0;">
+                                        @{
+                                            var priceTotal = (long)item.GiaNiemYet * item.SoLuong;
+                                            var lineTotal = item.SoTienCoc * item.SoLuong;
+                                            var rate = isPreOrder ? "15%" : "20%";
+                                            var fmtT = (decimal v) => v >= 1_000_000_000 ? $"{v / 1_000_000_000:N2} tỷ" : $"{v / 1_000_000:N0} triệu";
+                                        }
+                                        <div style="font-size:0.68rem;color: var(--text-faint);">Giá gốc: @(item.GiaNiemYet >= 1_000_000_000 ? $"{item.GiaNiemYet / 1_000_000_000m:N1} tỷ" : $"{item.GiaNiemYet / 1_000_000:N0} triệu") @(item.SoLuong > 1 ? $"x {item.SoLuong}" : "")</div>
+                                        <div style="font-size:0.72rem;color: var(--text-faint);">Tổng giá gốc: @fmtT(priceTotal)</div>
+                                        <div style="font-weight: 700; color: var(--brand-gold); font-size: 0.9rem;">Cọc @rate: @fmtT(lineTotal)</div>
+                                        <div style="font-size:0.68rem;color: var(--text-faint);">@item.SoTienCoc.ToString("N0")đ / xe @(isPreOrder ? "(15% cọc)" : "(20% cọc)")@(item.SoLuong > 1 ? $" x{item.SoLuong}" : "")</div>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 0.4rem; display: flex; align-items: center; gap: 0.5rem;">
+                                    <label style="font-size: 0.72rem; color: var(--text-muted);">Số lượng:</label>
+                                    <input type="number" name="QuantityInput[@item.MaPhienBan]" value="@item.SoLuong" min="1" max="@(isPreOrder ? 10 : item.SoLuong)"
+                                           class="form-control" style="width: 70px; font-size: 0.82rem; padding: 0.25rem 0.5rem;" />
+                                </div>
+                                @if (isPreOrder)
+                                {
+                                    <div style="margin-top: 0.4rem; font-size: 0.72rem; color: var(--text-faint);">
+                                        <i class="fas fa-truck me-1"></i> Xe đặt trước — showroom được chọn sẽ chuẩn bị xe cho bạn.
+                                    </div>
+                                }
+                                else if (Model.TonKhoTheoPhienBan.TryGetValue(item.MaPhienBan, out var tonKhoList) && tonKhoList.Any())
+                                {
+                                    var coSoHangXe = tonKhoList
+                                        .Select(tk => (tk, avail: Model.TonKhoConLaiLut.TryGetValue((item.MaPhienBan, tk.MaChiNhanh), out var a) ? a : tk.SoLuong))
+                                        .Where(x => x.avail > 0)
+                                        .ToList();
+                                    <div style="margin-top: 0.4rem; padding-top: 0.4rem; border-top: 1px solid rgba(255,255,255,0.04); font-size: 0.72rem; color: var(--text-faint); display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                                        @foreach (var x in coSoHangXe)
+                                        {
+                                            <span style="background: rgba(255,255,255,0.04); padding: 0.15rem 0.5rem; border-radius: 4px;">
+                                                @x.tk.ChiNhanh?.TenChiNhanh: <strong style="color: var(--brand-gold);">còn @x.avail</strong>
+                                            </span>
+                                        }
+                                        @if (!coSoHangXe.Any())
+                                        {
+                                            <span style="color: var(--text-faint);">Xe này hiện không còn hàng thực tế tại các showroom — showroom hẹn gặp sẽ chuẩn bị/xử lý.</span>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-3 pt-3" style="border-top: 1px solid rgba(255,255,255,0.08); flex-wrap: wrap; gap: 0.3rem;">
+                        <span style="color: var(--text-muted);">Tổng tiền gốc (@Model.CartItems.Sum(c => c.SoLuong) xe)</span>
+                        <span style="font-weight: 600; color: var(--brand-gold); font-size: 1rem;">
+                            @{
+                                var totalGoc = Model.CartItems.Sum(c => (long)c.GiaNiemYet * c.SoLuong);
+                            }
+                            @(totalGoc >= 1_000_000_000
+                                ? $"{totalGoc / 1_000_000_000m:N2} tỷ"
+                                : $"{totalGoc / 1_000_000:N0} triệu") VNĐ
+                        </span>
+                        <span style="color: var(--text-muted);">Tổng tiền cọc @cocRateText</span>
+                        <span style="font-weight: 700; color: var(--brand-gold); font-size: 1.2rem;">
+                            @(Model.TotalDeposit >= 1_000_000_000
+                                ? $"{Model.TotalDeposit / 1_000_000_000m:N2} tỷ"
+                                : $"{Model.TotalDeposit / 1_000_000:N0} triệu") VNĐ
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="deposit-card">
+                    <h4>Thông tin người đặt</h4>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;">Điền thông tin để hoàn tất đặt cọc</p>
+
+                    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+                    {
+                        <div style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; padding: 0.75rem 1rem; font-size: 0.85rem; margin-bottom: 1.5rem;">
+                            <i class="fas fa-exclamation-circle me-1"></i> @Model.ErrorMessage
+                        </div>
+                    }
+
+                    <form method="post">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Họ tên</label>
+                                <input asp-for="HoTen" class="form-control" required placeholder="Nhập họ tên" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Số điện thoại</label>
+                                <input asp-for="SoDienThoai" class="form-control" required placeholder="Nhập số điện thoại" />
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Địa chỉ</label>
+                                <input asp-for="DiaChi" class="form-control" required placeholder="Nhập địa chỉ" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Phương thức thanh toán</label>
+                                <select asp-for="PhuongThucThanhToan" class="form-control" required onchange="toggleCheckoutMap()">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="Chuyển khoản">Chuyển khoản</option>
+                                    <option value="Tiền mặt">Tiền mặt</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                @{
+                                    var cnCoXe = Model.TonKhoTheoPhienBan.Values
+                                        .SelectMany(l => l)
+                                        .Where(t =>
+                                        {
+                                            var a = Model.TonKhoConLaiLut.TryGetValue((t.MaPhienBan, t.MaChiNhanh), out var av) ? av : t.SoLuong;
+                                            return a > 0;
+                                        })
+                                        .Select(t => t.MaChiNhanh)
+                                        .Distinct()
+                                        .ToHashSet();
+                                    var showroomsHep = Model.DanhSachChiNhanh.Where(c => cnCoXe.Contains(c.MaChiNhanh)).ToList();
+                                    if (showroomsHep.Count == 0) showroomsHep = Model.DanhSachChiNhanh;
+                                }
+                                <label class="form-label">Showroom hẹn gặp (nhận xe)</label>
+                                <select asp-for="MaChiNhanh" class="form-control" required>
+                                    <option value="">-- Chọn showroom --</option>
+                                    @foreach (var cn in showroomsHep)
+                                    {
+                                        <option value="@cn.MaChiNhanh">@cn.TenChiNhanh (@cn.DiaChi)</option>
+                                    }
+                                </select>
+                                <small style="color: var(--text-faint); font-size: 0.72rem;">Chỉ hiển thị các showroom đang có xe nguồn của đơn hàng để tránh phát sinh chi phí vận chuyển. Xe sẽ ưu tiên lấy từ showroom này trước.</small>
+                            </div>
+                            <div class="col-12" id="cashMapBlock">
+                                        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 0.8rem;">
+                                            <label class="form-label" style="font-size: 0.85rem;"><i class="fas fa-map-marker-alt me-1" style="color: var(--brand-gold);"></i> Địa điểm nhân viên quản lý đến thu tiền cọc <span style="color: var(--brand-gold);">*</span></label>
+                                            <input asp-for="DiaDiemGap" type="hidden" />
+                                            <input asp-for="ToaDoGap" type="hidden" />
+                                            <div class="d-flex gap-2" style="position:relative;">
+                                                <input id="checkoutMapSearch" class="form-control" placeholder="Gõ địa chỉ cần tìm (VD: 321 Giải Phóng, Hà Nội)..." autocomplete="off" />
+                                                <button type="button" class="btn-premium btn-premium-solid" style="flex:0 0 auto;padding:0.5rem 1rem;" onclick="searchCheckoutAddress()"><i class="fas fa-search me-1"></i> Tìm</button>
+                                                <div id="checkoutSearchResults" style="position:absolute; top:100%; left:0; right:0; z-index:1200; max-height:240px; overflow:auto; display:none; background:var(--surface,#1f2430); border:1px solid rgba(255,255,255,0.14); border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,0.5);"></div>
+                                            </div>
+<div id="checkoutMapWrap" style="height: 300px; border-radius: 10px; margin-top: 0.5rem; border: 1px solid rgba(255,255,255,0.12); z-index: 0;">
+                                            <div id="checkoutMap" style="width:100%;height:100%;border-radius:10px;"></div>
+                                        </div>
+                                            <small style="color: var(--text-faint); font-size: 0.72rem;">Gõ địa chỉ rồi bấm <strong>Tìm</strong> (hoặc chọn kết quả gợi ý), sau đó <strong>kéo mũi tên</strong> đặt đúng vị trí nhà bạn. Toạ độ sẽ được gửi kèm <strong>link Google Maps</strong> cho nhân viên quản lý đến đúng chỗ thu tiền cọc.</small>
+                                        </div>
+                                    </div>
+                            <div class="col-12">
+                                <label class="form-label">Ghi chú</label>
+                                <textarea asp-for="GhiChu" class="form-control" rows="3" placeholder="Nhập ghi chú nếu có..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-3 mt-4">
+                            <button type="submit" class="btn-premium btn-premium-solid" style="flex: 1; justify-content: center; padding: 0.7rem;">
+                                <i class="fas fa-check"></i> Xác nhận đặt cọc @cocRateText
+                            </button>
+                            <a asp-page="/Orders/Cart/Index" class="btn-premium btn-premium-outline" style="flex: 0 0 auto; padding: 0.7rem 1.5rem;">
+                                Quay lại
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading overlay -->
+<div id="checkoutLoadingOverlay" style="display:none; position:fixed; inset:0; z-index:9999; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); align-items:center; justify-content:center; flex-direction:column;">
+    <div style="width:60px;height:60px;border:4px solid rgba(255,255,255,0.1);border-top-color:var(--brand-gold);border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:1.5rem;"></div>
+    <div style="color:var(--brand-white);font-size:1.1rem;font-weight:600;">Đang xử lý đặt cọc...</div>
+    <div style="color:var(--text-muted);font-size:0.82rem;margin-top:0.5rem;">Vui lòng chờ trong giây lát</div>
+</div>
+
+<style>
+@@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    var checkoutMap = null;
+    var checkoutMarker = null;
+    var checkoSuggestTimer = null;
+
+    function isCashPayment() {
+        var el = document.querySelector('[name="PhuongThucThanhToan"]');
+        return !!(el && el.value && el.value.trim() === 'Tiền mặt');
+    }
+
+    function toggleCheckoutMap() {
+        var block = document.getElementById('cashMapBlock');
+        var cash = isCashPayment();
+        if (block) block.style.display = cash ? '' : 'none';
+        if (!cash) {
+            var d = document.querySelector('[name="DiaDiemGap"]');
+            var t = document.querySelector('[name="ToaDoGap"]');
+            if (d) d.value = '';
+            if (t) t.value = '';
+            return;
+        }
+        initCheckoutMap();
+    }
+
+    function buildDiaDiem() {
+        var s = document.getElementById('checkoutMapSearch');
+        return (s && s.value) ? s.value.trim() : '';
+    }
+
+    function placeCheckoutMarker(lat, lng, displayName, zoom) {
+        if (!checkoutMap) initCheckoutMap();
+        if (!checkoutMap) return;
+        var toaDo = document.querySelector('[name="ToaDoGap"]');
+        var diaDiem = document.querySelector('[name="DiaDiemGap"]');
+        if (toaDo) toaDo.value = lat.toFixed(6) + ',' + lng.toFixed(6);
+        if (diaDiem) diaDiem.value = displayName || buildDiaDiem() || (lat.toFixed(5) + ', ' + lng.toFixed(5));
+        if (checkoutMarker) {
+            checkoutMarker.setLatLng([lat, lng]);
+        } else {
+            checkoutMarker = L.marker([lat, lng], { draggable: true }).addTo(checkoutMap);
+            checkoutMarker.on('dragend', function() {
+                var ll = checkoutMarker.getLatLng();
+                var t = document.querySelector('[name="ToaDoGap"]');
+                var d = document.querySelector('[name="DiaDiemGap"]');
+                if (t) t.value = ll.lat.toFixed(6) + ',' + ll.lng.toFixed(6);
+                if (d) d.value = buildDiaDiem() || (ll.lat.toFixed(5) + ', ' + ll.lng.toFixed(5));
+            });
+        }
+        checkoutMap.setView([lat, lng], zoom || 16);
+    }
+
+    function setCheckoutLocation(lat, lng, displayName) {
+        placeCheckoutMarker(lat, lng, displayName);
+    }
+
+    function applyCheckout(lat, lon, displayName) {
+        placeCheckoutMarker(lat, lon, displayName);
+    }
+
+    function hideCheckoutResults() {
+        var r = document.getElementById('checkoutSearchResults');
+        if (r) r.style.display = 'none';
+    }
+
+    function renderCheckoutResults(items) {
+        var r = document.getElementById('checkoutSearchResults');
+        if (!r) return;
+        r.innerHTML = '';
+        if (!items || !items.length) {
+            r.style.display = 'none';
+            return;
+        }
+        items.forEach(function(it) {
+            var d = document.createElement('div');
+            d.textContent = it.display_name || '';
+            d.style.cssText = 'padding:0.5rem 0.75rem;font-size:0.78rem;color:var(--brand-white,#eee);cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.06);';
+            d.onmouseover = function(){ d.style.background = 'rgba(255,255,255,0.08)'; };
+            d.onmouseout = function(){ d.style.background = 'transparent'; };
+            d.onclick = function() {
+                var s = document.getElementById('checkoutMapSearch');
+                if (s) s.value = it.display_name;
+                applyCheckout(parseFloat(it.lat), parseFloat(it.lon), it.display_name);
+                hideCheckoutResults();
+            };
+            r.appendChild(d);
+        });
+        r.style.display = 'block';
+    }
+
+    function geocodeCheckout(q) {
+        var url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=8&addressdetails=1&accept-language=vi&q=' + encodeURIComponent(q);
+        return fetch(url, { headers: { 'Accept': 'application/json', 'Referer': location.origin } })
+            .then(function(r) { return r.json(); })
+            .catch(function() { return []; });
+    }
+
+    async function geocodeSmart(q) {
+        var parts = q.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+        var cands = [];
+        function push(s) {
+            var v = (s || '').trim();
+            if (v && cands.indexOf(v) === -1) cands.push(v);
+        }
+        var jo = parts.join(', ');
+        push(jo);
+        push(parts.join(' '));
+        if (parts.length > 1) {
+            push(parts.slice(0, -1).join(', '));
+            push(parts.slice(0, -1).join(' '));
+            push(parts[0] + ' ' + parts[parts.length - 1]);
+            push(parts[0] + ', ' + parts[parts.length - 1]);
+        }
+        if (parts.length) push(parts[0]);
+        for (var i = 0; i < cands.length; i++) {
+            var res = await geocodeCheckout(cands[i]);
+            if (res && res.length) return res;
+        }
+        // Dự phòng: Photon (komoot) — nhận biết tốt địa chỉ Việt Nam, không cần key
+        var ph = await geocodePhoton(parts.join(' '));
+        if (ph && ph.length) return ph;
+        return [];
+    }
+
+    function geocodePhoton(q) {
+        var url = 'https://photon.komoot.io/api/?q=' + encodeURIComponent(q) + '&limit=5&lang=vi';
+        return fetch(url)
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                return (d.features || []).map(function(f) {
+                    var p = f.properties || {};
+                    var name = p.name || '';
+                    var city = p.city || p.state || p.county || '';
+                    var country = p.country || '';
+                    var parts2 = [name, city, country].filter(function(x){ return !!x; });
+                    return { lat: f.geometry.coordinates[1], lon: f.geometry.coordinates[0], display_name: parts2.join(', ') };
+                });
+            })
+            .catch(function() { return []; });
+    }
+
+    var checkoSuggestTimer = null;
+    function suggestCheck() {
+        var s = document.getElementById('checkoutMapSearch');
+        var q = (s ? s.value : '').trim();
+        if (q.length < 3) { hideCheckoutResults(); return; }
+        clearTimeout(checkoSuggestTimer);
+        checkoSuggestTimer = setTimeout(function() {
+            if (!checkoutMap) initCheckoutMap();
+            var lastQ = q;
+            geocodeCheckout(q).then(function(items) {
+                if ((document.getElementById('checkoutMapSearch') || {}).value !== lastQ) return;
+                renderCheckoutResults(items);
+            });
+        }, 400);
+    }
+
+    async function searchCheckoutAddress() {
+        var s = document.getElementById('checkoutMapSearch');
+        initCheckoutMap();
+        var q = (s ? s.value : '').trim() || buildDiaDiem();
+        if (!q) { showToast('Vui lòng nhập địa chỉ cần tìm.', true); return; }
+        var items = await geocodeSmart(q);
+        if (!items || !items.length) {
+            initCheckoutMap();
+            showToast('Không lấy được tọa độ chính xác cho "' + q + '". Hãy chọn một gợi ý từ danh sách, hoặc bấm trực tiếp lên bản đồ / kéo mũi tên để đặt đúng vị trí nhà bạn.', true);
+            return;
+        }
+        var it = items[0];
+        applyCheckout(parseFloat(it.lat), parseFloat(it.lon), it.display_name || buildDiaDiem());
+    }
+
+    function initCheckoutMap() {
+        var container = document.getElementById('checkoutMap');
+        if (!container || typeof L === 'undefined') return;
+        if (checkoutMap) { checkoutMap.invalidateSize(); return; }
+        checkoutMap = L.map('checkoutMap', { zoomControl: true, attributionControl: false }).setView([16.821, 108.0], 5);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '' }).addTo(checkoutMap);
+        checkoutMap.on('click', function(e) {
+            placeCheckoutMarker(e.latlng.lat, e.latlng.lng, null);
+            var el = document.getElementById('checkoutSearchResults');
+            if (el) el.style.display = 'none';
+        });
+    }
+
+    function bindCheckoutSearch() {
+        var searchEl = document.getElementById('checkoutMapSearch');
+        if (!searchEl || searchEl.dataset.bound) return;
+        searchEl.dataset.bound = '1';
+        searchEl.addEventListener('input', suggestCheck);
+        searchEl.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('checkoutSearchResults').style.display = 'none';
+                searchCheckoutAddress();
+            }
+            else if (e.key === 'Escape') { hideCheckoutResults(); }
+        });
+        searchEl.addEventListener('blur', function() { setTimeout(hideCheckoutResults, 200); });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        bindCheckoutSearch();
+        var paymentEl = document.querySelector('[name="PhuongThucThanhToan"]');
+        if (paymentEl) {
+            paymentEl.addEventListener('change', toggleCheckoutMap);
+            toggleCheckoutMap();
+        }
+    });
+</script>
+
+
+
+<script>
+    document.querySelector('.deposit-card form')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var form = this;
+        var diaDiemEl = form.querySelector('[name="DiaDiemGap"]');
+        if (isCashPayment() && (!diaDiemEl || !diaDiemEl.value)) {
+            showToast('Vui lòng chọn địa điểm nhân viên quản lý đến thu tiền cọc trên bản đồ.', true);
+            return;
+        }
+        var formData = new FormData(form);
+        formData.append('_ajax', 'true');
+
+        document.getElementById('checkoutLoadingOverlay').style.display = 'flex';
+
+        fetch(form.action, {
+            method: 'POST',
+            body: new URLSearchParams(formData),
+            headers: { 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || '' }
+        })
+        .then(function(r) {
+            var ct = r.headers.get('content-type') || '';
+            if (ct.indexOf('application/json') === -1) {
+                return r.text().then(function(t) { throw new Error('Server returned non-JSON response:\n' + t); });
+            }
+            return r.json();
+        })
+        .then(function(data) {
+            document.getElementById('checkoutLoadingOverlay').style.display = 'none';
+            if (data.success) {
+                showPaymentModal(data);
+            } else {
+                showToast(data.error || 'Có lỗi xảy ra. Vui lòng thử lại.', true);
+            }
+        })
+        .catch(function(err) {
+            document.getElementById('checkoutLoadingOverlay').style.display = 'none';
+            showToast('Lỗi kết nối: ' + (err.message || 'Không thể kết nối máy chủ'), true);
+        });
+    });
+
+    function showPaymentModal(data) {
+        var isCash = (data.paymentMethod || '').toLowerCase() === 'tiền mặt' || (data.paymentMethod || '').toLowerCase() === 'tien mat';
+        var bodyHtml = isCash
+            ? '<div style="padding:0.75rem 0 0.25rem;text-align:left;">' +
+              '<div style="display:flex;align-items:center;gap:0.6rem;padding:0.8rem 1rem;border-radius:10px;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.25);margin-bottom:0.9rem;">' +
+              '<i class="fas fa-money-bill-wave" style="color:#22c55e;font-size:1rem;"></i>' +
+              '<div><div style="color:var(--brand-white);font-weight:600;">Đơn của bạn đang chờ thanh toán</div><div style="color:var(--text-muted);font-size:0.78rem;">Admin và showroom sẽ kiểm tra đơn để xác nhận.</div></div></div>' +
+              '<div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:0.8rem;font-size:0.78rem;color:var(--text-muted);">' +
+              '<div style="display:flex;justify-content:space-between;padding:0.3rem 0;"><span>Tổng tiền cọc</span><span style="color:var(--brand-gold);font-weight:700;">' + formatMoney(data.soTienCoc) + '</span></div>' +
+              '<div style="display:flex;justify-content:space-between;padding:0.3rem 0;"><span>Mã đơn</span><span style="color:var(--brand-white);font-weight:700;">#' + data.maDonCoc + '</span></div>' +
+              '<div style="display:flex;justify-content:space-between;padding:0.3rem 0;"><span>Trạng thái</span><span style="color:#22c55e;font-weight:700;">' + (data.orderStatus || 'Chờ thanh toán') + '</span></div>' +
+              '</div>' +
+              '<p style="color:var(--text-faint);font-size:0.72rem;margin-top:0.8rem;">Đơn đã được ghi nhận. Chúng tôi sẽ gửi thông tin cho admin/showroom để xử lý sớm nhất.</p>' +
+              '<div style="margin-top:0.9rem;text-align:center;"><a href="' + (data.orderUrl || '/Profile') + '" class="btn-premium btn-premium-solid" style="display:inline-flex;align-items:center;justify-content:center;padding:0.6rem 1rem;">' +
+              '<i class="fas fa-eye me-1"></i> Xem trạng thái đơn</a></div>' +
+              '</div>'
+            : '<div style="text-align:left;background:rgba(255,255,255,0.05);border-radius:8px;padding:0.8rem;font-size:0.78rem;">' +
+              '<div style="display:flex;justify-content:space-between;padding:0.3rem 0;"><span style="color:var(--text-muted);">Tổng tiền gốc</span><span style="color:var(--brand-white);">' + formatMoney(data.tongTienGoc) + '</span></div>' +
+              '<div style="display:flex;justify-content:space-between;padding:0.3rem 0;"><span style="color:var(--text-muted);">Số tiền cọc (' + (data.cocRateText || '20%') + ')</span><span style="color:var(--brand-gold);font-weight:700;">' + formatMoney(data.soTienCoc) + '</span></div>' +
+              '<div style="display:flex;justify-content:space-between;padding:0.3rem 0;"><span style="color:var(--text-muted);">Ngân hàng</span><span style="color:var(--brand-white);">' + data.bankName + '</span></div>' +
+              '<div style="display:flex;justify-content:space-between;padding:0.3rem 0;"><span style="color:var(--text-muted);">STK</span><span style="color:var(--brand-white);font-weight:700;">' + data.bankNumber + '</span></div>' +
+              '<div style="display:flex;justify-content:space-between;padding:0.3rem 0;"><span style="color:var(--text-muted);">Nội dung CK</span><span style="font-family:monospace;background:rgba(255,255,255,0.05);padding:0.1rem 0.3rem;border-radius:4px;color:var(--brand-gold);">' + data.maGiaoDich + '</span></div>' +
+              '</div>' +
+              '<div style="background:white;border-radius:12px;padding:8px;display:inline-block;margin-top:0.8rem;">' +
+              '<img src="' + (data.qrUrl || '') + '" alt="QR" style="width:200px;height:200px;border-radius:8px;" /></div>' +
+              '<p style="color:var(--text-faint);font-size:0.72rem;margin-top:0.8rem;" id="paymentStatus">Đang chờ thanh toán...</p>';
+        var modalHtml = '<div class="modal fade" id="paymentModal" tabindex="-1" data-bs-backdrop="static">' +
+            '<div class="modal-dialog modal-dialog-centered modal-sm">' +
+            '<div class="modal-content" style="background:#1a1a2e;border:1px solid rgba(255,255,255,0.1);border-radius:16px;">' +
+            '<div class="modal-header border-0"><h5 class="modal-title" style="color:var(--brand-white);"><i class="fas ' + (isCash ? 'fa-money-bill-wave' : 'fa-qrcode') + ' me-2" style="color:var(--brand-gold);"></i> ' + (isCash ? 'Đơn chờ thanh toán' : 'Quét QR thanh toán') + '</h5>' +
+            '<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>' +
+            '<div class="modal-body text-center pb-4">' +
+            '<p style="color:var(--text-muted);font-size:0.82rem;margin-bottom:1rem;">' + (isCash ? 'Đơn cọc đã được ghi nhận để admin/showroom kiểm tra' : 'Quét mã QR để thanh toán <strong>đơn cọc</strong>') + '</p>' +
+            bodyHtml +
+            '</div></div></div></div>';
+
+        var div = document.createElement('div');
+        div.innerHTML = modalHtml;
+        document.body.appendChild(div);
+
+        var modal = new bootstrap.Modal(document.getElementById('paymentModal'));
+        modal.show();
+
+        // Poll for payment status
+        var pollTimer = setInterval(function() {
+            fetch('/api/check-payment?maDonCoc=' + data.maDonCoc)
+                .then(function(r) { return r.json(); })
+                .then(function(status) {
+                    if (status.paid) {
+                        clearInterval(pollTimer);
+                        document.getElementById('paymentModal').querySelector('.modal-body').innerHTML =
+                            '<div style="padding:1rem;"><div style="width:60px;height:60px;border-radius:50%;background:rgba(34,197,94,0.15);border:2px solid rgba(34,197,94,0.3);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:1.5rem;color:#22c55e;"><i class="fas fa-check"></i></div>' +
+                            '<h5 style="color:var(--brand-white);">Thanh toán thành công!</h5>' +
+                            '<p style="color:var(--text-muted);font-size:0.82rem;margin-bottom:1rem;">Đơn cọc đã được ghi nhận. Chúng tôi sẽ liên hệ sớm.</p>' +
+                            '<a href="/Profile" class="btn-premium btn-premium-solid" style="justify-content:center;padding:0.6rem;display:flex;"><i class="fas fa-user me-1"></i> Xem đơn của tôi</a></div>';
+                    }
+                })
+                .catch(function() {});
+        }, 5000);
+
+        document.getElementById('paymentModal').addEventListener('hidden.bs.modal', function() {
+            clearInterval(pollTimer);
+        });
+    }
+
+    function formatMoney(n) {
+        if (n >= 1000000000) return (n / 1000000000).toFixed(2) + ' tỷ VNĐ';
+        if (n >= 1000000) return (n / 1000000).toFixed(0) + ' triệu VNĐ';
+        return n.toLocaleString('vi-VN') + ' VNĐ';
+    }
+</script>

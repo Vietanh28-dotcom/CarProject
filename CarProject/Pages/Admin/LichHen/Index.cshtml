@@ -1,0 +1,98 @@
+@page
+@model CarProject.Pages.Admin.LichHen.IndexModel
+
+<div class="container-fluid db-wrap">
+    <div class="db-toolbar">
+        <div>
+            <h1 class="db-title">Quản lý Lịch Hẹn Lái Thử</h1>
+            <div class="db-subtitle">Tổng cộng @Model.LichHenList.Count lịch hẹn · Dashboard quản trị</div>
+        </div>
+        <a asp-page="Create" class="db-btn-primary">
+            <i class="fas fa-plus me-1"></i> Thêm Lịch Hẹn
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">@TempData["Success"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">@TempData["Error"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    }
+
+    @if (Model.LichHenList.Count == 0)
+    {
+        <div class="alert alert-info">Không có lịch hẹn nào.</div>
+    }
+    else
+    {
+        <div class="db-card">
+            <div class="db-table-responsive">
+                <table class="db-table" style="min-width:1100px;">
+                    <colgroup>
+                        <col style="width:80px" />
+                        <col style="width:160px" />
+                        <col style="width:180px" />
+                        <col style="width:220px" />
+                        <col style="width:120px" />
+                        <col style="width:90px" />
+                        <col style="width:130px" />
+                        <col style="width:120px" />
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>Mã</th>
+                            <th>Khách hàng</th>
+                            <th>Dòng xe</th>
+                            <th>Chi nhánh</th>
+                            <th>Ngày hẹn</th>
+                            <th>Giờ hẹn</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var l in Model.LichHenList)
+                        {
+                            <tr>
+                                <td><span class="db-id">#@l.MaLichHen</span></td>
+                                <td><div class="db-name">@(l.KhachHang?.TenDangNhap ?? "—")</div></td>
+                                <td><div class="db-name">@(l.DongXe?.TenDong ?? "—")</div></td>
+                                <td><div class="db-2line">@(l.ChiNhanh?.TenChiNhanh ?? "—")</div></td>
+                                <td><div class="db-date">@(l.NgayHen?.ToString("dd/MM/yyyy") ?? "Chưa chốt")</div></td>
+                                <td><div class="db-name">@l.GioHen</div></td>
+                                <td>
+                                    @switch (l.TrangThai)
+                                    {
+                                        case "Chờ xác nhận":
+                                            <span class="db-badge yellow">@l.TrangThai</span>
+                                            break;
+                                        case "Đã xác nhận":
+                                            <span class="db-badge green">@l.TrangThai</span>
+                                            break;
+                                        case "Đã hủy":
+                                            <span class="db-badge red">@l.TrangThai</span>
+                                            break;
+                                        case "Hoàn tất":
+                                            <span class="db-badge blue">@l.TrangThai</span>
+                                            break;
+                                        default:
+                                            <span class="db-badge gray">@l.TrangThai</span>
+                                            break;
+                                    }
+                                </td>
+                                <td>
+                                    <div class="db-actions">
+                                        <a asp-page="Edit" asp-route-id="@l.MaLichHen" class="db-act edit" title="Sửa"><i class="fas fa-edit"></i></a>
+                                        <a asp-page="Delete" asp-route-id="@l.MaLichHen" class="db-act del" title="Xóa" onclick="return confirm('Xác nhận xóa?');"><i class="fas fa-trash-alt"></i></a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

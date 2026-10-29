@@ -1,0 +1,367 @@
+@page
+@model CompareModel
+@{
+    ViewData["Title"] = "So sánh xe";
+}
+
+<style>
+    .compare-header {
+        background: linear-gradient(135deg, #0f0f1a, #1a1a2e);
+        padding: 2.5rem 0;
+        margin-bottom: 2rem;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .compare-card {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 16px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    .compare-card:hover { border-color: rgba(212,175,55,0.3); }
+    .compare-card .car-thumb {
+        background: linear-gradient(135deg, #111122, #1a1a2e);
+        padding: 1.75rem 1.5rem 1.25rem;
+        text-align: center;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .compare-card .car-thumb .car-icon { font-size: 3rem; color: var(--accent-gold); opacity: 0.7; }
+    .compare-card .car-thumb h4 { color: #fff; font-weight: 700; margin: 0.5rem 0 0.25rem; font-size: 1.1rem; }
+    .compare-card .car-thumb .brand-name { color: var(--accent-gold); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; }
+    .compare-empty {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem 1.5rem;
+    }
+    .pick-btn {
+        padding: 0.7rem 1.8rem;
+        border-radius: 50px;
+        border: 2px dashed rgba(255,255,255,0.25);
+        background: transparent;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .pick-btn:hover { border-color: var(--accent-gold); color: var(--accent-gold); background: rgba(212,175,55,0.06); }
+    .vs-divider {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        font-family: var(--font-title);
+        font-size: 1.3rem;
+        font-weight: 900;
+        color: var(--accent-gold);
+        opacity: 0.5;
+        letter-spacing: 2px;
+    }
+    .spec-table { width: 100%; border-collapse: collapse; }
+    .spec-table td {
+        padding: 0.75rem 1.25rem;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        font-size: 0.85rem;
+    }
+    .spec-table tr:last-child td { border-bottom: none; }
+    .spec-label { color: var(--text-muted); width: 100px; font-weight: 500; }
+    .spec-value { color: #fff; font-weight: 600; text-align: center; }
+    .spec-value.winner { color: var(--accent-gold); }
+    .spec-value.loser { opacity: 0.5; }
+    .winner-icon { color: var(--accent-gold); margin-left: 0.3rem; font-size: 0.7rem; }
+    .overall-score {
+        padding: 1rem 1.25rem;
+        text-align: center;
+        border-top: 1px solid rgba(255,255,255,0.06);
+        margin-top: auto;
+    }
+    .overall-score .score { font-size: 1.5rem; font-weight: 900; color: var(--accent-gold); }
+    .overall-score .score-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+    .spec-table .spec-row td:first-child { text-align: left; }
+    .car-modal-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        border-radius: 10px;
+        transition: background 0.2s;
+        border: 1px solid transparent;
+    }
+    .car-modal-item:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); }
+    .car-modal-item .car-icon { font-size: 1.5rem; width: 40px; text-align: center; color: var(--accent-gold); }
+    .car-modal-item .car-name { font-weight: 600; color: #fff; }
+    .car-modal-item .car-brand { font-size: 0.75rem; color: var(--text-muted); }
+    .car-modal-item.selected { border-color: var(--accent-gold); background: rgba(212,175,55,0.1); }
+    #carSearch { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff; border-radius: 50px; padding: 0.6rem 1.2rem; }
+    #carSearch::placeholder { color: var(--text-muted); }
+    #carSearch:focus { outline: none; border-color: var(--accent-gold); }
+    .modal-content-compare { background: #1a1a2e; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; }
+    .modal-header-compare { border-bottom: 1px solid rgba(255,255,255,0.08); padding: 1.25rem 1.5rem; }
+    .modal-header-compare .btn-close { filter: invert(1); }
+    .modal-footer-compare { border-top: 1px solid rgba(255,255,255,0.08); padding: 1rem 1.5rem; }
+</style>
+
+<div class="compare-header">
+    <div class="container">
+        <nav class="breadcrumb-premium mb-3">
+            <a asp-page="/Index"><i class="fas fa-home"></i> Trang chủ</a>
+            <span>/</span>
+            <span>So sánh xe</span>
+        </nav>
+        <div class="text-center">
+            <p class="section-label justify-content-center">Đối chiếu</p>
+            <h2 class="section-heading text-center">So sánh dòng xe</h2>
+            <p class="section-desc mx-auto text-center">Chọn 2 dòng xe để so sánh trực tiếp thông số</p>
+        </div>
+    </div>
+</div>
+
+<div class="container" style="padding-bottom: 4rem;">
+    <div class="row g-4 align-items-stretch">
+        <div class="col-md-5">
+            <div class="compare-card">
+                @if (Model.CarLeft != null)
+                {
+                    <div class="car-thumb">
+                            @if (!string.IsNullOrEmpty(Model.ImageLeft))
+                            {
+                                <img src="@Model.ImageLeft" alt="@Model.CarLeft.TenDong" style="max-width:100%;max-height:120px;border-radius:12px;object-fit:contain;margin-bottom:0.5rem;" />
+                            }
+                            else
+                            {
+                                <div class="car-icon"><i class="fas fa-car-side"></i></div>
+                            }
+                            <h4>@Model.CarLeft.TenDong</h4>
+                        <div class="brand-name">@Model.CarLeft.HangXe?.TenHang</div>
+                        <button class="btn-premium btn-premium-outline mt-2" style="padding:0.3rem 1rem;font-size:0.6rem;" onclick="openPicker(1)">
+                            <i class="fas fa-sync-alt me-1"></i> Đổi
+                        </button>
+                    </div>
+                    <div class="spec-table-wrap" style="flex:1;">
+                        <table class="spec-table">
+                            <tr class="spec-row @(Model.LeftWins.KieuDang ? "winner" : "")">
+                                <td class="spec-label">Kiểu dáng</td>
+                                <td class="spec-value @(Model.LeftWins.KieuDang ? "winner" : "loser")">@Model.CarLeft.KieuDang @if(Model.LeftWins.KieuDang){<i class="fas fa-crown winner-icon"></i>}</td>
+                            </tr>
+                            <tr class="spec-row @(Model.LeftWins.Gia ? "winner" : "")">
+                                <td class="spec-label">Giá niêm yết</td>
+                                <td class="spec-value @(Model.LeftWins.Gia ? "winner" : "loser")">@(Model.PriceLeft.HasValue ? $"{Model.PriceLeft.Value:N0}đ" : "Liên hệ") @if(Model.LeftWins.Gia){<i class="fas fa-crown winner-icon"></i>}</td>
+                            </tr>
+                            <tr class="spec-row @(Model.LeftWins.DongCo ? "winner" : "")">
+                                <td class="spec-label">Động cơ</td>
+                                <td class="spec-value @(Model.LeftWins.DongCo ? "winner" : "loser")">@(Model.EngineLeft ?? "—") @if(Model.LeftWins.DongCo){<i class="fas fa-crown winner-icon"></i>}</td>
+                            </tr>
+                            <tr class="spec-row @(Model.LeftWins.HopSo ? "winner" : "")">
+                                <td class="spec-label">Hộp số</td>
+                                <td class="spec-value @(Model.LeftWins.HopSo ? "winner" : "loser")">@(Model.TransLeft ?? "—") @if(Model.LeftWins.HopSo){<i class="fas fa-crown winner-icon"></i>}</td>
+                            </tr>
+                            <tr class="spec-row @(Model.LeftWins.NhienLieu ? "winner" : "")">
+                                <td class="spec-label">Nhiên liệu</td>
+                                <td class="spec-value @(Model.LeftWins.NhienLieu ? "winner" : "loser")">@(Model.FuelLeft ?? "—") @if(Model.LeftWins.NhienLieu){<i class="fas fa-crown winner-icon"></i>}</td>
+                            </tr>
+                            <tr class="spec-row @(Model.LeftWins.MauSac ? "winner" : "")">
+                                <td class="spec-label">Màu sắc</td>
+                                <td class="spec-value @(Model.LeftWins.MauSac ? "winner" : "loser")">@(Model.ColorLeft ?? "—") @if(Model.LeftWins.MauSac){<i class="fas fa-crown winner-icon"></i>}</td>
+                            </tr>
+                            <tr class="spec-row @(Model.LeftWins.TonKho ? "winner" : "")">
+                                <td class="spec-label">Tồn kho</td>
+                                <td class="spec-value @(Model.LeftWins.TonKho ? "winner" : "loser")">@(Model.StockLeft?.ToString() ?? "0") @if(Model.LeftWins.TonKho){<i class="fas fa-crown winner-icon"></i>}</td>
+                            </tr>
+                            <tr class="spec-row @(Model.LeftWins.TrangThai ? "winner" : "")">
+                                <td class="spec-label">Trạng thái</td>
+                                <td class="spec-value @(Model.LeftWins.TrangThai ? "winner" : "loser")">@(Model.StatusLeft ?? "—") @if(Model.LeftWins.TrangThai){<i class="fas fa-crown winner-icon"></i>}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="overall-score">
+                        <div class="score">@Model.LeftScore / @(Model.LeftScore + Model.RightScore)</div>
+                        <div class="score-label">@(Model.LeftScore > Model.RightScore ? "🏆 Ưu thế" : Model.LeftScore == Model.RightScore ? "⚖️ Cân bằng" : "")</div>
+                    </div>
+                    <div class="text-center pb-3">
+                        <a asp-page="/Details" asp-route-id="@Model.CarLeft.MaDong" class="btn-premium btn-premium-outline" style="padding:0.35rem 1.5rem;font-size:0.7rem;">
+                            <i class="fas fa-info-circle me-1"></i> Chi tiết
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="compare-empty">
+                        <div style="font-size:3rem;opacity:0.15;margin-bottom:1rem;"><i class="fas fa-car-side"></i></div>
+                        <button class="pick-btn" onclick="openPicker(1)"><i class="fas fa-plus-circle"></i> Chọn xe bên trái</button>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="col-md-2 d-flex align-items-stretch">
+            <div class="vs-divider w-100">VS</div>
+        </div>
+
+        <div class="col-md-5">
+            <div class="compare-card">
+                @if (Model.CarRight != null)
+                {
+                    <div class="car-thumb">
+                            @if (!string.IsNullOrEmpty(Model.ImageRight))
+                            {
+                                <img src="@Model.ImageRight" alt="@Model.CarRight.TenDong" style="max-width:100%;max-height:120px;border-radius:12px;object-fit:contain;margin-bottom:0.5rem;" />
+                            }
+                            else
+                            {
+                                <div class="car-icon"><i class="fas fa-car-side"></i></div>
+                            }
+                            <h4>@Model.CarRight.TenDong</h4>
+                        <div class="brand-name">@Model.CarRight.HangXe?.TenHang</div>
+                        <button class="btn-premium btn-premium-outline mt-2" style="padding:0.3rem 1rem;font-size:0.6rem;" onclick="openPicker(2)">
+                            <i class="fas fa-sync-alt me-1"></i> Đổi
+                        </button>
+                    </div>
+                    <div class="spec-table-wrap" style="flex:1;">
+                        <table class="spec-table">
+                            <tr class="spec-row @(Model.RightWins.KieuDang ? "winner" : "")">
+                                <td class="spec-label">Kiểu dáng</td>
+                                <td class="spec-value @(Model.RightWins.KieuDang ? "winner" : "loser")">@Model.CarRight.KieuDang @if(Model.RightWins.KieuDang){<i class="fas fa-crown winner-icon"></i>}</td>
+                            </tr>
+                            <tr class="spec-row @(Model.RightWins.Gia ? "winner" : "")">
+                                <td class="spec-label">Giá niêm yết</td>
+                                <td class="spec-value @(Model.RightWins.Gia ? "winner" : "loser")">@(Model.PriceRight.HasValue ? $"{Model.PriceRight.Value:N0}đ" : "Liên hệ") @if(Model.RightWins.Gia){<i class="fas fa-crown winner-icon"></i>}</td>
+                            </tr>
+                            <tr class="spec-row @(Model.RightWins.DongCo ? "winner" : "")">
+                                <td class="spec-label">Động cơ</td>
+                                <td class="spec-value @(Model.RightWins.DongCo ? "winner" : "loser")">@(Model.EngineRight ?? "—") @if(Model.RightWins.DongCo){<i class="fas fa-crown winner-icon"></i>}</td>
+                            </tr>
+                            <tr class="spec-row @(Model.RightWins.HopSo ? "winner" : "")">
+                                <td class="spec-label">Hộp số</td>
+                                <td class="spec-value @(Model.RightWins.HopSo ? "winner" : "loser")">@(Model.TransRight ?? "—") @if(Model.RightWins.HopSo){<i class="fas fa-crown winner-icon"></i>}</td>
+                            </tr>
+                            <tr class="spec-row @(Model.RightWins.NhienLieu ? "winner" : "")">
+                                <td class="spec-label">Nhiên liệu</td>
+                                <td class="spec-value @(Model.RightWins.NhienLieu ? "winner" : "loser")">@(Model.FuelRight ?? "—") @if(Model.RightWins.NhienLieu){<i class="fas fa-crown winner-icon"></i>}</td>
+                            </tr>
+                            <tr class="spec-row @(Model.RightWins.MauSac ? "winner" : "")">
+                                <td class="spec-label">Màu sắc</td>
+                                <td class="spec-value @(Model.RightWins.MauSac ? "winner" : "loser")">@(Model.ColorRight ?? "—") @if(Model.RightWins.MauSac){<i class="fas fa-crown winner-icon"></i>}</td>
+                            </tr>
+                            <tr class="spec-row @(Model.RightWins.TonKho ? "winner" : "")">
+                                <td class="spec-label">Tồn kho</td>
+                                <td class="spec-value @(Model.RightWins.TonKho ? "winner" : "loser")">@(Model.StockRight?.ToString() ?? "0") @if(Model.RightWins.TonKho){<i class="fas fa-crown winner-icon"></i>}</td>
+                            </tr>
+                            <tr class="spec-row @(Model.RightWins.TrangThai ? "winner" : "")">
+                                <td class="spec-label">Trạng thái</td>
+                                <td class="spec-value @(Model.RightWins.TrangThai ? "winner" : "loser")">@(Model.StatusRight ?? "—") @if(Model.RightWins.TrangThai){<i class="fas fa-crown winner-icon"></i>}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="overall-score">
+                        <div class="score">@Model.RightScore / @(Model.LeftScore + Model.RightScore)</div>
+                        <div class="score-label">@(Model.RightScore > Model.LeftScore ? "🏆 Ưu thế" : Model.RightScore == Model.LeftScore ? "⚖️ Cân bằng" : "")</div>
+                    </div>
+                    <div class="text-center pb-3">
+                        <a asp-page="/Details" asp-route-id="@Model.CarRight.MaDong" class="btn-premium btn-premium-outline" style="padding:0.35rem 1.5rem;font-size:0.7rem;">
+                            <i class="fas fa-info-circle me-1"></i> Chi tiết
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="compare-empty">
+                        <div style="font-size:3rem;opacity:0.15;margin-bottom:1rem;"><i class="fas fa-car-side"></i></div>
+                        <button class="pick-btn" onclick="openPicker(2)"><i class="fas fa-plus-circle"></i> Chọn xe bên phải</button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    @if (Model.CarLeft != null && Model.CarRight != null)
+    {
+        <div class="text-center mt-4">
+            <button class="btn-premium btn-premium-solid d-inline-flex" style="padding:0.5rem 2rem;" onclick="openPicker(0)">
+                <i class="fas fa-exchange-alt me-2"></i> Chọn lại cả hai
+            </button>
+        </div>
+    }
+</div>
+
+<!-- Modal chọn xe -->
+<div class="modal fade" id="carPickerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content modal-content-compare">
+            <div class="modal-header modal-header-compare">
+                <h5 class="modal-title" style="color:#fff;"><i class="fas fa-car me-2"></i> Chọn dòng xe</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-3">
+                <div class="mb-3">
+                    <input type="text" id="carSearch" class="form-control" placeholder="Tìm kiếm xe..." onkeyup="filterCars()">
+                </div>
+                <div id="carList" style="max-height:400px;overflow-y:auto;">
+                    @foreach (var c in Model.AllCars)
+                    {
+                        <div class="car-modal-item" data-name="@c.TenDong.ToLower()" data-id="@c.MaDong">
+                            <div class="car-icon"><i class="fas fa-car"></i></div>
+                            <div>
+                                <div class="car-name">@c.TenDong</div>
+                                <div class="car-brand">@c.HangXe?.TenHang · @c.KieuDang</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="modal-footer modal-footer-compare">
+                <button type="button" class="btn-premium btn-premium-outline" data-bs-dismiss="modal" style="padding:0.4rem 1.5rem;">Hủy</button>
+                <button type="button" class="btn-premium btn-premium-solid" onclick="confirmPick()" style="padding:0.4rem 1.5rem;">Chọn xe này</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let pickTarget = 0, selectedCarId = 0;
+
+    function openPicker(slot) {
+        pickTarget = slot;
+        selectedCarId = 0;
+        document.querySelectorAll('#carList .car-modal-item').forEach(el => el.classList.remove('selected'));
+        document.getElementById('carSearch').value = '';
+        filterCars();
+        new bootstrap.Modal(document.getElementById('carPickerModal')).show();
+    }
+
+    document.getElementById('carList').addEventListener('click', function(e) {
+        const item = e.target.closest('.car-modal-item');
+        if (!item) return;
+        document.querySelectorAll('#carList .car-modal-item').forEach(el => el.classList.remove('selected'));
+        item.classList.add('selected');
+        selectedCarId = parseInt(item.dataset.id);
+    });
+
+    function filterCars() {
+        const q = document.getElementById('carSearch').value.toLowerCase();
+        document.querySelectorAll('#carList .car-modal-item').forEach(el => {
+            el.style.display = el.dataset.name.includes(q) ? '' : 'none';
+        });
+    }
+
+    function confirmPick() {
+        if (!selectedCarId) return;
+        const params = new URLSearchParams(window.location.search);
+        if (pickTarget === 1) {
+            params.set('left', selectedCarId);
+        } else if (pickTarget === 2) {
+            params.set('right', selectedCarId);
+        } else {
+            const allItems = document.querySelectorAll('#carList .car-modal-item');
+            const ids = Array.from(allItems).map(el => parseInt(el.dataset.id)).filter(id => id !== selectedCarId);
+            params.set('left', selectedCarId);
+            params.set('right', ids.length > 0 ? ids[0] : '');
+        }
+        window.location.search = params.toString();
+    }
+</script>

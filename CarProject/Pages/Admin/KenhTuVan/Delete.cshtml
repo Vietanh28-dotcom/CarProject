@@ -1,0 +1,25 @@
+@page "{id:int}"
+@model CarProject.Pages.Admin.KenhTuVan.DeleteModel
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6">
+            <h2>Xóa Kênh Tư Vấn</h2>
+            @if (Model.Kenh == null)
+            {
+                <div class="alert alert-danger">Không tìm thấy kênh tư vấn.</div>
+            }
+            else
+            {
+                <div class="alert alert-warning">
+                    Bạn có chắc muốn xóa kênh tư vấn <strong>Mã @Model.Kenh.MaKenh</strong>?
+                </div>
+                <form method="post">
+                    <input type="hidden" asp-for="Kenh.MaKenh" />
+                    <button type="submit" class="btn btn-danger">Xóa</button>
+                    <a asp-page="Index" class="btn btn-secondary">Hủy</a>
+                </form>
+            }
+        </div>
+    </div>
+</div>

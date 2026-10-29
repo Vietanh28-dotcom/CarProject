@@ -1,0 +1,85 @@
+@page
+@model CarProject.Pages.Orders.Cart.CheckoutResultModel
+@{
+    ViewData["Title"] = "Đặt cọc thành công";
+}
+
+<div class="deposit-page" style="padding: 2rem 0;">
+    <div class="result-card" style="max-width: 600px; margin: 2rem auto; background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 2.5rem; text-align: center;">
+        <div class="check-icon" style="width: 70px; height: 70px; border-radius: 50%; background: rgba(34,197,94,0.15); border: 2px solid rgba(34,197,94,0.3); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; font-size: 1.8rem; color: #22c55e;">
+            <i class="fas fa-check"></i>
+        </div>
+        <h4 style="color: var(--brand-white); margin-bottom: 0.3rem;">Đặt cọc thành công!</h4>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">
+            Cảm ơn <strong>@Model.HoTen</strong>! Đơn đặt cọc cho <strong>@Model.SoLuongXe xe</strong> đã được ghi nhận.
+        </p>
+        <p style="color: var(--text-faint); font-size: 0.82rem; margin-bottom: 1.5rem;">
+            Vui lòng chuyển khoản theo thông tin bên dưới để hoàn tất đặt cọc.
+        </p>
+
+        <div class="bank-card" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.5rem; text-align: left; margin: 1.5rem 0;">
+            <div style="display: flex; justify-content: space-between; padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem;">
+                <span style="color: var(--text-muted);">Số lượng xe</span>
+                <span style="color: var(--brand-white); font-weight: 600;">@Model.SoLuongXe xe</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem;">
+                <span style="color: var(--text-muted);">Tổng tiền gốc</span>
+                <span style="color: var(--brand-white); font-weight: 600;">@Model.TongTienGocStr</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem;">
+                <span style="color: var(--text-muted);">Tổng tiền cọc @Model.CocRateText</span>
+                <span style="color: var(--brand-gold); font-weight: 700; font-size: 1.1rem;">@Model.TotalDepositStr</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem;">
+                <span style="color: var(--text-muted);">Phương thức</span>
+                <span style="color: var(--brand-white); font-weight: 600;">@Model.PhuongThucThanhToan</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 0.6rem 0; font-size: 0.85rem;">
+                <span style="color: var(--text-muted);">Mã đơn</span>
+                <span style="color: var(--brand-white); font-weight: 600; font-size: 0.8rem;">
+                    @string.Join(", ", Model.MaDonCocs.Select(m => $"#{m}"))
+                </span>
+            </div>
+            <div style="border-top: 1px solid rgba(255,255,255,0.08); margin: 0.5rem 0;"></div>
+            <div style="display: flex; justify-content: space-between; padding: 0.6rem 0; font-size: 0.85rem;">
+                <span style="color: var(--text-muted);">Ngân hàng thụ hưởng</span>
+                <span style="color: var(--brand-white); font-weight: 600;">@Model.BankName</span>
+            </div>
+            @if (Model.ShowQr)
+            {
+                <div style="display:flex;justify-content:center;margin:0.8rem 0 0.6rem;">
+                    <div style="background:white;border-radius:12px;padding:8px;display:inline-block;">
+                        <img src="@Model.QrImageUrl" alt="QR thanh toán" style="width:200px;height:200px;border-radius:8px;" />
+                    </div>
+                </div>
+            }
+            <div style="display: flex; justify-content: space-between; padding: 0.6rem 0; font-size: 0.85rem;">
+                <span style="color: var(--text-muted);">Số tài khoản</span>
+                <span style="color: var(--brand-white); font-weight: 700; font-size: 1rem;">@Model.BankNumber</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 0.6rem 0; font-size: 0.85rem;">
+                <span style="color: var(--text-muted);">Chủ tài khoản</span>
+                <span style="color: var(--brand-white); font-weight: 600;">@Model.AccountName</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 0.6rem 0; font-size: 0.85rem;">
+                <span style="color: var(--text-muted);">Nội dung chuyển khoản</span>
+                <span style="color: var(--brand-white); font-weight: 600; font-family: monospace; background: rgba(255,255,255,0.05); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">
+                    @Model.MaGiaoDich
+                </span>
+            </div>
+        </div>
+
+        <p style="color: var(--text-faint); font-size: 0.82rem; margin-bottom: 1.5rem;">
+            Chuyển khoản đúng nội dung để hệ thống tự động xác nhận. Nhân viên MyLxCar cũng sẽ liên hệ qua số <strong>@Model.SoDienThoai</strong>.
+        </p>
+
+        <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+            <a asp-page="/Profile" class="btn-premium btn-premium-solid" style="justify-content: center; padding: 0.7rem;">
+                <i class="fas fa-user"></i> Xem đơn của tôi
+            </a>
+            <a asp-page="/Index" class="btn-premium btn-premium-outline" style="justify-content: center; padding: 0.7rem;">
+                <i class="fas fa-home"></i> Về trang chủ
+            </a>
+        </div>
+    </div>
+</div>

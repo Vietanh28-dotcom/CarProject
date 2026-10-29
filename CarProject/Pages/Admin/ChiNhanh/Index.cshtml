@@ -1,0 +1,81 @@
+@page
+@model CarProject.Pages.Admin.ChiNhanh.IndexModel
+
+<div class="container-fluid db-wrap">
+    <div class="db-toolbar">
+        <div>
+            <h1 class="db-title">Quản lý Chi Nhánh Showroom</h1>
+            <div class="db-subtitle">Tổng cộng @Model.ChiNhanhList.Count chi nhánh · Dashboard quản trị</div>
+        </div>
+        <a asp-page="Create" class="db-btn-primary">
+            <i class="fas fa-plus me-1"></i> Thêm Chi Nhánh
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">@TempData["Success"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">@TempData["Error"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    }
+
+    @if (Model.ChiNhanhList.Count == 0)
+    {
+        <div class="alert alert-info">Không có chi nhánh nào.</div>
+    }
+    else
+    {
+        <div class="db-card">
+            <div class="db-table-responsive">
+                <table class="db-table" style="min-width:1190px;">
+                    <colgroup>
+                        <col style="width:90px" />
+                        <col style="width:220px" />
+                        <col style="width:250px" />
+                        <col style="width:120px" />
+                        <col style="width:130px" />
+                        <col style="width:140px" />
+                        <col style="width:120px" />
+                        <col style="width:120px" />
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>Mã CN</th>
+                            <th>Tên Chi Nhánh</th>
+                            <th>Địa Chỉ</th>
+                            <th>Thành Phố</th>
+                            <th>Đường Dây Nóng</th>
+                            <th>Quản Lý</th>
+                            <th>Trạng Thái</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var cn in Model.ChiNhanhList)
+                        {
+                            var trangThaiCls = cn.TrangThai == "Hoạt động" ? "green" : (cn.TrangThai == "Ngừng hoạt động" || cn.TrangThai == "Đóng cửa" ? "red" : "gray");
+
+                            <tr>
+                                <td><span class="db-id">@cn.MaChiNhanh</span></td>
+                                <td><div class="db-name">@cn.TenChiNhanh</div></td>
+                                <td><div class="db-2line">@cn.DiaChi</div></td>
+                                <td><div class="db-name">@cn.ThanhPho</div></td>
+                                <td><div class="db-name">@cn.DuongDayNong</div></td>
+                                <td><div class="db-name">@(cn.QuanLy?.TenDangNhap ?? "—")</div></td>
+                                <td><span class="db-badge @trangThaiCls">@cn.TrangThai</span></td>
+                                <td>
+                                    <div class="db-actions">
+                                        <a asp-page="Edit" asp-route-id="@cn.MaChiNhanh" class="db-act edit" title="Sửa"><i class="fas fa-edit"></i></a>
+                                        <a asp-page="Delete" asp-route-id="@cn.MaChiNhanh" class="db-act del" title="Xóa" onclick="return confirm('Xác nhận xóa?');"><i class="fas fa-trash-alt"></i></a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

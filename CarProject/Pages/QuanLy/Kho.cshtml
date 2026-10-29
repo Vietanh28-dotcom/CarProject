@@ -1,0 +1,131 @@
+@page
+@model CarProject.Pages.QuanLy.KhoModel
+@{
+    ViewData["Title"] = "Kho showroom";
+    Layout = "_Layout";
+}
+
+<div class="container py-4">
+    <h4 class="mb-3"><i class="fas fa-boxes-stacked me-2"></i>Kho showroom - <strong>@(Model.Showroom?.TenChiNhanh)</strong></h4>
+
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle me-1"></i> @Model.SuccessMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-triangle me-1"></i> @Model.ErrorMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card">
+        <div class="card-header bg-dark text-white py-2"><i class="bi bi-boxes me-1"></i> Tồn kho của showroom & bán trực tiếp</div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Xe / Phiên bản</th>
+                            <th class="text-end">Giá niêm yết</th>
+                            <th class="text-end">Giá nhập</th>
+                            <th class="text-end">Tồn kho của bạn</th>
+                            <th class="text-end">Tồn tổng</th>
+                            <th class="text-end">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var k in Model.KhoItems)
+                        {
+                            <tr>
+                                <td>
+                                    @k.TenXe
+                                    @if (k.CoDonCoc)
+                                    {
+                                        <span class="badge bg-warning text-dark ms-1">Đang giữ cọc</span>
+                                    }
+                                </td>
+                                <td class="text-end">@k.GiaNiemYet.ToString("N0")</td>
+                                <td class="text-end">@k.GiaNhap.ToString("N0")</td>
+                                <td class="text-end">@k.TonKhoCuaToi</td>
+                                <td class="text-end">@k.TonTong</td>
+                                <td class="text-end">
+                                    @if (k.TonKhoCuaToi > 0 && !k.CoDonCoc)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-success" onclick="openBan(@k.MaPhienBan, '@k.TenXe.Replace("'", "\\'")', @k.TonKhoCuaToi, @k.GiaNiemYet, @k.GiaNhap)">
+                                            <i class="bi bi-cash-coin me-1"></i>Bán
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">@(k.CoDonCoc ? "Đang giữ cọc - không bán" : "Hết hàng")</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal bán trực tiếp -->
+<div class="modal fade" id="banModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form method="post" asp-page-handler="Ban">
+                <input type="hidden" name="maPhienBan" id="ban_maPhienBan" />
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-cash-coin me-1"></i> Bán trực tiếp từ kho</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2"><strong id="ban_tenXe"></strong></p>
+                    <div class="small text-muted mb-2">
+                        Giá niêm yết: <strong id="ban_gia"></strong><br />
+                        Giá nhập: <strong id="ban_giaNhap"></strong><br />
+                        Lãi / xe: <strong id="ban_lai" class="text-success"></strong>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small">Số lượng bán</label>
+                        <input type="number" id="ban_soLuong" name="soLuong" min="1" value="1" class="form-control" oninput="banTotal()" />
+                    </div>
+                    <div class="small text-muted">Tổng doanh thu tăng: <strong id="ban_tongLai" class="text-success">0đ</strong></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-success"><i class="bi bi-check-lg me-1"></i> Xác nhận bán</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var banTon = 0, banGia = 0, banGiaNhap = 0;
+        function openBan(m, tenXe, ton, gia, giaNhap) {
+            banTon = ton; banGia = gia; banGiaNhap = giaNhap;
+            document.getElementById('ban_maPhienBan').value = m;
+            document.getElementById('ban_tenXe').textContent = tenXe;
+            document.getElementById('ban_gia').textContent = gia.toLocaleString('vi-VN') + 'đ';
+            document.getElementById('ban_giaNhap').textContent = giaNhap.toLocaleString('vi-VN') + 'đ';
+            var lai = Math.max(0, gia - giaNhap);
+            document.getElementById('ban_lai').textContent = lai.toLocaleString('vi-VN') + 'đ';
+            var sl = document.getElementById('ban_soLuong');
+            sl.value = 1; sl.max = ton;
+            banTotal();
+            new bootstrap.Modal(document.getElementById('banModal')).show();
+        }
+        function banTotal() {
+            var sl = parseInt(document.getElementById('ban_soLuong').value) || 0;
+            var lai = Math.max(0, banGia - banGiaNhap) * sl;
+            document.getElementById('ban_tongLai').textContent = lai.toLocaleString('vi-VN') + 'đ';
+        }
+    </script>
+}

@@ -1,0 +1,121 @@
+@page
+@model CarProject.Pages.Orders.Cart.IndexModel
+@{
+    ViewData["Title"] = "Giỏ hàng";
+    var totalItems = Model.CartItems.Sum(c => c.SoLuong);
+}
+
+<div class="deposit-page">
+    <div class="container py-4">
+        <nav class="breadcrumb-premium mb-4">
+            <a asp-page="/Index"><i class="fas fa-home"></i> Trang chủ</a>
+            <span>/</span>
+            <span>Giỏ hàng</span>
+        </nav>
+
+        @if (TempData["CartError"] != null)
+        {
+            <div style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; padding: 0.75rem 1rem; font-size: 0.85rem; margin-bottom: 1.5rem;">
+                <i class="fas fa-exclamation-circle me-1"></i> @TempData["CartError"]
+            </div>
+        }
+
+        @if (Model.CartItems.Count == 0)
+        {
+            <div class="text-center py-5">
+                <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.2;"><i class="fas fa-shopping-cart"></i></div>
+                <h4 style="color: var(--brand-white);">Giỏ hàng trống</h4>
+                <p style="color: var(--text-muted);">Thêm xe vào giỏ hàng để tiến hành đặt cọc số lượng lớn (tối thiểu 3 xe).</p>
+                <a asp-page="/Cars" class="btn-premium btn-premium-solid mt-3 d-inline-flex"><i class="fas fa-car"></i> Xem xe</a>
+            </div>
+        }
+        else
+        {
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 style="color: var(--brand-white); margin: 0;">
+                    <i class="fas fa-shopping-cart me-2"></i> Giỏ hàng
+                    <span style="font-size: 0.85rem; font-weight: 400; color: var(--text-muted);">
+                        (@totalItems xe)
+                    </span>
+                </h4>
+                <form method="post" asp-page-handler="Clear" style="display: inline;">
+                    <button type="submit" class="btn-premium btn-premium-outline" style="padding: 0.4rem 1rem; font-size: 0.82rem;">
+                        <i class="fas fa-trash"></i> Xóa tất cả
+                    </button>
+                </form>
+            </div>
+
+            <div class="row g-3">
+                @foreach (var item in Model.CartItems)
+                {
+                    <div class="col-12">
+                        <div style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1rem; display: flex; align-items: center; gap: 1rem;">
+                            <div style="width: 80px; height: 60px; background: var(--brand-black); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <i class="fas fa-car" style="font-size: 1.5rem; opacity: 0.2; color: var(--brand-white);"></i>
+                            </div>
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="font-weight: 600; color: var(--brand-white); font-size: 0.95rem;">
+                                    @item.TenPhienBan
+                                    <span style="font-weight: 400; color: var(--text-muted); font-size: 0.8rem;">(@item.TenDong)</span>
+                                </div>
+                                <div style="font-size: 0.78rem; color: var(--text-faint); display: flex; gap: 1rem; margin-top: 0.3rem;">
+                                    <span>@item.MauSac</span>
+                                    <span>@item.DongCo</span>
+                                    <span>@item.HopSo</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0;">
+                                <form method="post" asp-page-handler="UpdateQuantity" style="display: flex; align-items: center; gap: 0.3rem; background: rgba(255,255,255,0.05); border-radius: 6px; padding: 0.2rem;">
+                                    <input type="hidden" name="maPhienBan" value="@item.MaPhienBan" />
+                                    <button type="submit" name="soLuong" value="@(item.SoLuong - 1)" class="qty-btn" style="background:none;border:none;color:var(--brand-silver);cursor:pointer;padding:0.2rem 0.4rem;font-size:0.85rem;">-</button>
+                                    <span style="color:var(--brand-white);font-weight:600;min-width:24px;text-align:center;font-size:0.9rem;">@item.SoLuong</span>
+                                    <button type="submit" name="soLuong" value="@(item.SoLuong + 1)" class="qty-btn" style="background:none;border:none;color:var(--brand-silver);cursor:pointer;padding:0.2rem 0.4rem;font-size:0.85rem;">+</button>
+                                </form>
+                            </div>
+                            <div style="text-align: right; flex-shrink: 0; min-width: 120px;">
+                                <div style="font-size: 0.75rem; color: var(--text-faint);">Tạm tính</div>
+                                <div style="font-weight: 700; color: var(--brand-gold); font-size: 0.95rem;">
+                                    @{
+                                        var lineTotal = item.SoTienCoc * item.SoLuong;
+                                    }
+                                    @(lineTotal >= 1_000_000_000
+                                        ? $"{lineTotal / 1_000_000_000:N1} tỷ"
+                                        : $"{lineTotal / 1_000_000:N0} triệu")
+                                </div>
+                            </div>
+                            <form method="post" asp-page-handler="Remove" style="display: inline;">
+                                <input type="hidden" name="maPhienBan" value="@item.MaPhienBan" />
+                                <button type="submit" style="background: none; border: none; color: rgba(239,68,68,0.6); cursor: pointer; padding: 0.5rem; font-size: 1rem;">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div style="margin-top: 2rem; background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="color: var(--text-muted); font-size: 0.82rem;">Tổng tiền cọc (20% tổng giá trị xe)</div>
+                    <div style="font-family: var(--font-title); font-size: 1.5rem; font-weight: 700; color: var(--brand-gold);">
+                        @(Model.TotalDeposit >= 1_000_000_000
+                            ? $"{Model.TotalDeposit / 1_000_000_000:N2} tỷ"
+                            : $"{Model.TotalDeposit / 1_000_000:N0} triệu")
+                        <small style="font-size: 0.78rem; font-weight: 400; color: var(--text-muted);">VNĐ</small>
+                    </div>
+                </div>
+                <form method="post" asp-page-handler="Checkout">
+                    <button type="submit" class="btn-premium btn-premium-solid" style="padding: 0.7rem 2rem; @(totalItems < 3 ? "opacity:0.5;pointer-events:none;" : "")">
+                        <i class="fas fa-check"></i> Tiến hành đặt cọc
+                    </button>
+                </form>
+            </div>
+            @if (totalItems < 3)
+            {
+                <div style="font-size: 0.78rem; color: var(--text-faint); margin-top: 0.5rem; text-align: right;">
+                    <i class="fas fa-info-circle"></i> Cần thêm @(3 - totalItems) xe nữa để đạt tối thiểu 3 xe
+                </div>
+            }
+        }
+    </div>
+</div>

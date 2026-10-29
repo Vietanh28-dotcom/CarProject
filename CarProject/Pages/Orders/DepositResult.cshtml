@@ -1,0 +1,334 @@
+@page
+@model CarProject.Pages.Orders.DepositResultModel
+@{
+    ViewData["Title"] = "Đặt cọc thành công";
+}
+
+<style>
+.result-card {
+    max-width: 600px; margin: 2rem auto;
+    background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.08); border-radius: 16px;
+    padding: 2.5rem; text-align: center;
+}
+.result-card .check-icon {
+    width: 70px; height: 70px; border-radius: 50%;
+    background: rgba(34,197,94,0.15); border: 2px solid rgba(34,197,94,0.3);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1.5rem; font-size: 1.8rem; color: #22c55e;
+}
+.bank-card {
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px; padding: 1.5rem; text-align: left; margin: 1.5rem 0;
+}
+.bank-card .row-line {
+    display: flex; justify-content: space-between; padding: 0.6rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem;
+}
+.bank-card .row-line:last-child { border-bottom: none; }
+.bank-card .label { color: var(--text-muted); }
+.bank-card .value { color: var(--brand-white); font-weight: 600; }
+
+.qr-container {
+    width: 250px; height: 250px; margin: 1.5rem auto;
+    background: white; border-radius: 12px; padding: 10px;
+    display: flex; align-items: center; justify-content: center;
+}
+.qr-container img { max-width: 100%; max-height: 100%; }
+</style>
+
+<div class="deposit-page" style="padding: 2rem 0;">
+    <div class="result-card">
+        @if (Model.IsFailed)
+        {
+            @if (Model.IsPaidBeforeFail)
+            {
+                <div class="check-icon" style="background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.35); color:#f59e0b;"><i class="fas fa-money-bill-wave"></i></div>
+                <h4 style="color: var(--brand-white); margin-bottom: 0.3rem;">Đã chuyển tiền đặt cọc thành công</h4>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">
+                    Tiền cọc đơn <strong>#@Model.MaDonCoc</strong> đã <strong>thanh toán thành công</strong>, nhưng đơn bị <strong>Tiếp nhận thất bại</strong> (bị từ chối/huỷ). Chúng tôi sẽ liên hệ để <strong>hoàn lại tiền cọc</strong> cho bạn.
+                </p>
+            }
+            else
+            {
+                <div class="check-icon" style="background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.35); color:#ef4444;"><i class="fas fa-times"></i></div>
+                <h4 style="color: var(--brand-white); margin-bottom: 0.3rem;">Đặt cọc thất bại</h4>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">
+                    Đơn cọc <strong>#@Model.MaDonCoc</strong> đã bị <strong>từ chối / hủy</strong> trước khi thanh toán tiền cọc. Liên hệ showroom để biết thêm chi tiết hoặc đặt lại lần khác.
+                </p>
+            }
+        }
+        else
+        {
+        @if (Model.IsMoneyReceived)
+        {
+            @if (Model.IsCashPayment)
+            {
+            <div class="check-icon"><i class="fas fa-money-bill-wave"></i></div>
+            <h4 style="color: var(--brand-white); margin-bottom: 0.3rem;">Đã nhận tiền đặt cọc</h4>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">
+                Showroom đã <strong>xác nhận nhận tiền cọc</strong> của đơn <strong>#@Model.MaDonCoc</strong>. Đơn đang chờ showroom <strong>xác nhận xe</strong> và chốt lịch hẹn giao xe cho bạn.
+            </p>
+            }
+            else
+            {
+            <div class="check-icon"><i class="fas fa-check"></i></div>
+            <h4 style="color: var(--brand-white); margin-bottom: 0.3rem;">Chuyển khoản thành công</h4>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">
+                Tiền cọc đơn <strong>#@Model.MaDonCoc</strong> đã <strong>thanh toán thành công</strong> — <strong>đã nhận tiền đặt cọc</strong>. Đơn đang chờ showroom <strong>xác nhận xe</strong> và chốt lịch hẹn giao xe cho bạn.
+            </p>
+            }
+        }
+        else if (Model.IsCashPending || Model.TrangThaiDonHang == "Chờ xác nhận" || Model.TrangThaiDonHang == "Chờ xử lý")
+        {
+        <div class="check-icon" style="background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.35); color:#f59e0b;"><i class="fas fa-hourglass-half"></i></div>
+        <h4 style="color: var(--brand-white); margin-bottom: 0.3rem;">Chờ xác nhận</h4>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">
+            @if (Model.IsCashPending)
+            {
+                <text>Đơn đặt cọc của <strong>@Model.HoTen</strong> đã được ghi nhận. Showroom sẽ <strong>xác nhận nhận tiền cọc</strong> và chốt lịch hẹn cho bạn.</text>
+            }
+            else
+            {
+                <text>Đơn đặt cọc của <strong>@Model.HoTen</strong> đã được ghi nhận và đang chờ showroom/admin xử lý.</text>
+            }
+        </p>
+        }
+        else if (Model.IsTransferPending)
+        {
+        <div class="check-icon" style="background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.35); color:#f59e0b;"><i class="fas fa-credit-card"></i></div>
+        <h4 style="color: var(--brand-white); margin-bottom: 0.3rem;">Chờ thanh toán</h4>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">
+            Đơn đặt cọc của <strong>@Model.HoTen</strong> đang chờ <strong>chuyển khoản</strong>. Vui lòng quét mã hoặc chuyển khoản theo thông tin bên dưới để hoàn tất đặt cọc.
+        </p>
+        }
+        else
+        {
+        <div class="check-icon"><i class="fas fa-check"></i></div>
+        <h4 style="color: var(--brand-white); margin-bottom: 0.3rem;">Đặt cọc thành công!</h4>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">
+            Cảm ơn <strong>@Model.HoTen</strong>! Đơn cọc <strong>#@Model.MaDonCoc</strong> đã được ghi nhận thành công.
+        </p>
+        }
+        }
+
+        <div class="bank-card" style="text-align: left;">
+            <h6 style="color: var(--brand-gold); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem; border-bottom: 1px solid rgba(212,175,55,0.2); padding-bottom: 0.5rem;">
+                <i class="fas fa-car me-1"></i> Thông tin xe
+            </h6>
+            <div class="row-line">
+                <span class="label">Phiên bản</span>
+                <span class="value">@Model.TenPhienBan</span>
+            </div>
+            <div class="row-line">
+                <span class="label">Giá niêm yết</span>
+                <span class="value" style="color: var(--brand-gold);">@Model.GiaNiemYetStr</span>
+            </div>
+            <div class="row-line">
+                <span class="label">Động cơ</span>
+                <span class="value">@Model.DongCo</span>
+            </div>
+            <div class="row-line">
+                <span class="label">Hộp số</span>
+                <span class="value">@Model.HopSo</span>
+            </div>
+            <div class="row-line">
+                <span class="label">Màu sắc</span>
+                <span class="value">@Model.MauSac</span>
+            </div>
+            <div class="row-line">
+                <span class="label">Nhiên liệu</span>
+                <span class="value">@Model.LoaiNhietLieu</span>
+            </div>
+
+            <h6 style="color: var(--brand-gold); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; margin: 1rem 0 0.5rem; border-bottom: 1px solid rgba(212,175,55,0.2); padding-bottom: 0.5rem;">
+                <i class="fas fa-credit-card me-1"></i> Thông tin đặt cọc
+            </h6>
+            <div class="row-line">
+                <span class="label">Đơn cọc</span>
+                <span class="value">#@Model.MaDonCoc</span>
+            </div>
+            <div class="row-line">
+                <span class="label">Tổng tiền gốc</span>
+                <span class="value">@Model.TongTienGocStr</span>
+            </div>
+            <div class="row-line">
+                <span class="label">Tổng tiền đặt cọc @Model.CocRateText</span>
+                <span class="value" style="color: var(--brand-gold); font-size: 1.1rem;">@Model.SoTienCocStr</span>
+            </div>
+            <div class="row-line">
+                <span class="label">Trạng thái</span>
+                <span class="value">
+                    @if (Model.IsFailed)
+                    {
+                        <span class="badge bg-danger">@Model.TrangThaiDonHang</span>
+                    }
+                    else if (Model.TrangThaiDonHang == "Đã duyệt" || Model.TrangThaiDonHang == "Đã xác nhận" || Model.TrangThaiDonHang == "Hoàn tất" || Model.TrangThaiDonHang == "Đã thanh toán")
+                    {
+                        <span class="badge bg-success">Đã đặt cọc</span>
+                    }
+                    else if (Model.IsMoneyReceived)
+                    {
+                        <span class="badge bg-success">Đã nhận tiền đặt cọc</span>
+                    }
+                    else if (Model.IsCashPending || Model.TrangThaiDonHang == "Chờ xác nhận" || Model.TrangThaiDonHang == "Chờ xử lý")
+                    {
+                        <span class="badge bg-warning text-dark">Chờ xác nhận</span>
+                    }
+                    else if (Model.IsTransferPending || Model.TrangThaiDonHang == "Chờ thanh toán")
+                    {
+                        <span class="badge bg-warning text-dark">Chờ thanh toán</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">@Model.TrangThaiDonHang</span>
+                    }
+                </span>
+            </div>
+            @if (Model.IsCashPayment)
+            {
+                <div class="row-line">
+                    <span class="label">Phương thức</span>
+                    <span class="value">Tiền mặt</span>
+                </div>
+                @if (Model.IsMoneyReceived)
+                {
+                    <div class="row-line">
+                        <span class="label">Trạng thái tiền</span>
+                        <span class="value" style="color:#22c55e;"><i class="fas fa-check me-1"></i>Đã nhận tiền đặt cọc</span>
+                    </div>
+                }
+                else
+                {
+                    <div class="row-line">
+                        <span class="label">Ghi chú</span>
+                        <span class="value">Đơn đang chờ showroom xác nhận nhận tiền cọc.</span>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="row-line">
+                    <span class="label">Phương thức</span>
+                    <span class="value">Chuyển khoản</span>
+                </div>
+                @if (Model.IsMoneyReceived)
+                {
+                    <div class="row-line">
+                        <span class="label">Trạng thái tiền</span>
+                        <span class="value" style="color:#22c55e;"><i class="fas fa-check me-1"></i>Đã nhận tiền đặt cọc</span>
+                    </div>
+                }
+                else
+                {
+                    <div class="row-line">
+                        <span class="label">Ngân hàng</span>
+                        <span class="value">@Model.BankName</span>
+                    </div>
+                    @if (Model.ShowQr)
+                    {
+                        <div style="display:flex;justify-content:center;margin:0.8rem 0 0.6rem;">
+                            <div style="background:white;border-radius:12px;padding:8px;display:inline-block;">
+                                <img src="@Model.QrImageUrl" alt="QR thanh toán" style="width:200px;height:200px;border-radius:8px;" />
+                            </div>
+                        </div>
+                    }
+                    <div class="row-line">
+                        <span class="label">Số tài khoản</span>
+                        <span class="value" style="font-size: 1rem;">@Model.BankNumber</span>
+                    </div>
+                    <div class="row-line">
+                        <span class="label">Chủ tài khoản</span>
+                        <span class="value">@Model.AccountName</span>
+                    </div>
+                    <div class="row-line">
+                        <span class="label">Nội dung chuyển khoản</span>
+                        <span class="value" style="font-family: monospace; background: rgba(255,255,255,0.05); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">
+                            @Model.TransferContent
+                        </span>
+                    </div>
+                }
+            }
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.ShowroomTen))
+        {
+            <div class="bank-card" style="text-align: left;">
+                <h6 style="color: var(--brand-gold); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 1rem; border-bottom: 1px solid rgba(212,175,55,0.2); padding-bottom: 0.5rem;">
+                    <i class="fas fa-store me-1"></i> Showroom gặp mặt
+                </h6>
+                <div class="row-line">
+                    <span class="label">Showroom</span>
+                    <span class="value">@Model.ShowroomTen</span>
+                </div>
+                <div class="row-line">
+                    <span class="label">Địa chỉ</span>
+                    <span class="value">@Model.ShowroomDiaChi</span>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(Model.ShowroomThanhPho))
+                {
+                    <div class="row-line">
+                        <span class="label">Thành phố</span>
+                        <span class="value">@Model.ShowroomThanhPho</span>
+                    </div>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.DiaDiemGap))
+                {
+                    <div class="row-line">
+                        <span class="label">Điểm hẹn cụ thể</span>
+                        <span class="value">@Model.DiaDiemGap</span>
+                    </div>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.ToaDoGap))
+                {
+                    <div class="row-line">
+                        <span class="label">Tọa độ</span>
+                        <span class="value"><a href="https://www.google.com/maps?q=@Model.ToaDoGap" target="_blank" rel="noopener" style="color:var(--brand-gold);">@Model.ToaDoGap <i class="fas fa-external-link-alt ms-1" style="font-size:0.7rem;"></i></a></span>
+                    </div>
+                }
+            </div>
+        }
+
+        @if (Model.ChiTiets.Any())
+        {
+            <div class="bank-card" style="text-align: left;">
+                <h6 style="color: var(--brand-gold); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem; border-bottom: 1px solid rgba(212,175,55,0.2); padding-bottom: 0.5rem;">
+                    <i class="fas fa-clipboard-list me-1"></i> Tiến trình từng xe
+                </h6>
+                @foreach (var ct in Model.ChiTiets)
+                {
+                    var ctTen = $"{ct.PhienBan?.DongXe?.TenDong ?? ""} {ct.PhienBan?.TenPhienBan ?? ""}".Trim();
+                    var ctStatus = ct.TrangThaiTiepNhan;
+                    var ctBadge = ctStatus switch
+                    {
+                        "Đã tiếp nhận" => "<span class='badge bg-success'>Đã tiếp nhận</span>",
+                        "Từ chối" => $"<span class='badge bg-danger'>Từ chối</span>",
+                        _ => "<span class='badge bg-warning text-dark'>Chờ xác nhận</span>"
+                    };
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:0.6rem 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.82rem;">
+                        <div style="color:var(--brand-white);text-align:left;">
+                            @ctTen <small style="color:var(--text-faint);">x@(ct.SoLuong)</small><br>
+                            <small style="color:var(--text-faint);">Showroom: @(ct.ChiNhanh?.TenChiNhanh ?? ct.MaChiNhanh)</small>
+                        </div>
+                        <div style="text-align:right;flex-shrink:0;">
+                            @Html.Raw(ctBadge)
+                            @if (ctStatus == "Từ chối" && !string.IsNullOrEmpty(ct.LyDoTuChoi))
+                            {
+                                <br><small style="color:#ef4444;font-size:0.68rem;">Lý do: @ct.LyDoTuChoi</small>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        <div style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.8rem;">
+            <a asp-page="/Profile" class="btn-premium btn-premium-solid" style="justify-content: center; padding: 0.7rem;">
+                <i class="fas fa-user"></i> Xem đơn của tôi
+            </a>
+            <a asp-page="/Index" class="btn-premium btn-premium-outline" style="justify-content: center; padding: 0.7rem;">
+                <i class="fas fa-home"></i> Về trang chủ
+            </a>
+        </div>
+    </div>
+</div>

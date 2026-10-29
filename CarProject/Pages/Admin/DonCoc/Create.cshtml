@@ -1,0 +1,77 @@
+@page
+@model CarProject.Pages.Admin.DonCoc.CreateModel
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <h2>Thêm Đơn Cọc</h2>
+            <form method="post">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="DonCoc.MaKhachHang" class="form-label">Khách Hàng</label>
+                        <select asp-for="DonCoc.MaKhachHang" asp-items="Model.KhachHangList" class="form-select" required>
+                            <option value="">-- Chọn khách hàng --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="DonCoc.MaPhienBan" class="form-label">Phiên Bản Xe</label>
+                        <select asp-for="DonCoc.MaPhienBan" asp-items="Model.PhienBanList" class="form-select" required>
+                            <option value="">-- Chọn phiên bản --</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="DonCoc.SoTienCoc" class="form-label">Số Tiền Cọc</label>
+                        <input asp-for="DonCoc.SoTienCoc" class="form-control" type="number" step="0.01" required />
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="DonCoc.NgayTaoDon" class="form-label">Ngày Tạo Đơn</label>
+                        <input asp-for="DonCoc.NgayTaoDon" class="form-control" type="date" required />
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="DonCoc.NgayHenNhanXe" class="form-label">Ngày Hẹn Nhận Xe</label>
+                        <input asp-for="DonCoc.NgayHenNhanXe" class="form-control" type="date" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="DonCoc.PhuongThucThanhToan" class="form-label">Phương Thức Thanh Toán</label>
+                        <select asp-for="DonCoc.PhuongThucThanhToan" class="form-select" required>
+                            <option value="">-- Chọn --</option>
+                            <option value="Chuyển khoản">Chuyển khoản</option>
+                            <option value="Tiền mặt">Tiền mặt</option>
+                            <option value="Cả hai">Cả hai</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="DonCoc.TrangThaiThanhToan" class="form-label">Trạng Thái Thanh Toán</label>
+                        <select asp-for="DonCoc.TrangThaiThanhToan" class="form-select" required>
+                            <option value="">-- Chọn --</option>
+                            <option value="Chưa thanh toán">Chưa thanh toán</option>
+                            <option value="Đã thanh toán">Đã thanh toán</option>
+                            <option value="Một phần">Một phần</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="DonCoc.TrangThaiDonHang" class="form-label">Trạng Thái Đơn Hàng</label>
+                        <select asp-for="DonCoc.TrangThaiDonHang" class="form-select" required>
+                            <option value="">-- Chọn --</option>
+                            <option value="Chờ xử lý">Chờ xử lý</option>
+                            <option value="Đã xác nhận">Đã xác nhận</option>
+                            <option value="Đã hủy">Đã hủy</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="DonCoc.GhiChu" class="form-label">Ghi Chú</label>
+                    <textarea asp-for="DonCoc.GhiChu" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="mb-3">
+                    <button type="submit" class="btn btn-primary">Thêm</button>
+                    <a asp-page="Index" class="btn btn-secondary">Hủy</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

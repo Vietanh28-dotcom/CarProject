@@ -1,0 +1,829 @@
+@page
+@model CarProject.Pages.CarsModel
+
+@{
+    ViewData["Title"] = "Showroom - MyLxCar";
+    bool isAdminView = User.IsJwtLoggedIn()
+        && User.GetJwtRole() == "Admin"
+        && Request.Cookies["AdminMode"] == "View";
+    var carIconMap = new Dictionary<string, string>
+    {
+        {"Toyota Camry", "\U0001f697"}, {"Toyota Hilux", "\U0001f699"}, {"Honda Civic", "\U0001f697"},
+        {"Honda Pilot", "\U0001f699"}, {"Ford Explorer", "\U0001f699"}, {"BMW 3 Series", "\U0001f697"},
+        {"VinFast Lux SA", "\U0001f699"}, {"VinFast Fadil", "\U0001f695"}
+    };
+    var carBgList = new List<string> { "#050505", "#0a0a0a", "#0f0f0f", "#080808", "#070707", "#0c0c0c" };
+    var bodyTypes = Model.DongXeList.Select(d => d.KieuDang).Where(k => !string.IsNullOrEmpty(k)).Distinct().ToList();
+}
+
+<div class="listing-page">
+    <div class="container py-4">
+        <nav class="breadcrumb-premium">
+            <a asp-page="/Index"><i class="fas fa-home"></i> Trang chủ</a>
+            <span>/</span>
+            <span>Showroom</span>
+        </nav>
+
+        <div class="row g-4">
+            <!-- Filter Sidebar -->
+            <div class="col-lg-3 reveal">
+                <div class="filter-sidebar">
+                    <h6><i class="fas fa-sliders-h me-2"></i> Bộ lọc</h6>
+                    <form method="get" id="filterForm">
+                        <div class="search-box">
+                            <i class="fas fa-search" style="color: var(--text-faint);"></i>
+                            <input type="text" name="Search" value="@Model.Search" placeholder="Tìm kiếm xe..." />
+                        </div>
+                        <div class="filter-group">
+                            <span class="filter-label">Hãng xe</span>
+                            @foreach (var brand in Model.HangXeList)
+                            {
+                                <label>
+                                    <input type="radio" name="Brand" value="@brand.MaHang"
+                                           onchange="document.getElementById('filterForm').submit()"
+                                           checked="@(Model.Brand == brand.MaHang.ToString())" />
+                                    @brand.TenHang
+                                </label>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.Brand))
+                            {
+                                <a asp-page="/Cars" class="clear-filter">Xóa lọc</a>
+                            }
+                        </div>
+                        <div class="filter-group">
+                            <span class="filter-label">Kiểu dáng</span>
+                            @foreach (var type in bodyTypes)
+                            {
+                                <label>
+                                    <input type="radio" name="BodyType" value="@type"
+                                           onchange="document.getElementById('filterForm').submit()"
+                                           checked="@(Model.BodyType == type)" />
+                                    @type
+                                </label>
+                            }
+                        </div>
+                        @if (!string.IsNullOrEmpty(Model.Search) || !string.IsNullOrEmpty(Model.Brand) || !string.IsNullOrEmpty(Model.BodyType))
+                        {
+                            <a asp-page="/Cars" class="btn-premium btn-premium-outline" style="width:100%;justify-content:center;padding:0.5rem;font-size:0.65rem;">
+                                <i class="fas fa-times-circle"></i> Xóa bộ lọc
+                            </a>
+                        }
+                    </form>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-lg-9">
+                <div class="listing-header reveal">
+                    <span class="result-count"><strong id="carsTotalCount">@Model.TotalCount</strong> xe được tìm thấy</span>
+                    <div class="sort-group">
+                        <label>Sắp xếp:</label>
+                        <select onchange="window.location.href='?sort='+this.value+((new URLSearchParams(window.location.search).get('brand'))?'&brand='+new URLSearchParams(window.location.search).get('brand'):'')">
+                            <option value="">Mặc định</option>
+                            <option value="name_asc" selected="@(Model.Sort == "name_asc")">Tên A-Z</option>
+                            <option value="name_desc" selected="@(Model.Sort == "name_desc")">Tên Z-A</option>
+                        </select>
+                    </div>
+                </div>
+
+                @if (!Model.DongXeList.Any())
+                {
+                    <div class="text-center py-5">
+                        <div style="font-size:3rem;margin-bottom:1rem;opacity:0.2;"><i class="fas fa-search"></i></div>
+                        <h4 style="color:var(--brand-white);">Không tìm thấy xe</h4>
+                        <p style="color: var(--text-muted);">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm.</p>
+                    </div>
+                }
+
+                <div class="car-grid" id="carsGrid">
+                    @foreach (var d in Model.DongXeList.Select((item, idx) => new { item, idx }))
+                    {
+                        var delay = (d.idx % 4) * 0.08;
+                        var bg = carBgList[d.item.MaDong % carBgList.Count];
+                        var brandInfo = d.item.HangXe;
+                        var carIcon = carIconMap.GetValueOrDefault(d.item.TenDong, "\U0001f697");
+                        var firstVer = d.item.PhienBanXes?.FirstOrDefault();
+                        var totalStock = d.item.PhienBanXes?.Sum(p => (int?)p.SoLuongTrongKho) ?? 0;
+                        var carImg = d.item.DuongDanAnh ?? firstVer?.DuongDanAnh ?? brandInfo?.DuongDanLogo;
+                        var carPrice = firstVer?.GiaNiemYet;
+                        var versionsJson = System.Text.Json.JsonSerializer.Serialize(
+                            d.item.PhienBanXes?.Select(p => (object)new { p.TenPhienBan, p.GiaNiemYet, p.SoLuongTrongKho }) ?? new object[0]);
+                        var showroomGroups = (d.item.PhienBanXes ?? new List<PhienBanXe>())
+                            .SelectMany(p => Model.TonKhoTheoPhienBan.TryGetValue(p.MaPhienBan, out var tl) ? tl : new List<TonKhoTheoChiNhanh>())
+                            .GroupBy(t => t.MaChiNhanh)
+                            .Select(g => new
+                            {
+                                g.Key,
+                                SoLuong = g.Sum(x => x.SoLuong),
+                                Ten = Model.TenChiNhanhLut.TryGetValue(g.Key, out var tn) ? tn : g.Key,
+                                PhienBans = g.GroupBy(x => x.MaPhienBan)
+                                    .Select(pg => new
+                                    {
+                                        TenPhienBan = d.item.PhienBanXes?.FirstOrDefault(p => p.MaPhienBan == pg.Key)?.TenPhienBan ?? pg.Key.ToString(),
+                                        SoLuong = pg.Sum(x => x.SoLuong)
+                                    })
+                                    .OrderByDescending(x => x.SoLuong)
+                                    .ToList()
+                            })
+                            .OrderByDescending(x => x.SoLuong)
+                            .ToList();
+                        var showroomJson = System.Text.Json.JsonSerializer.Serialize(showroomGroups);
+                        <div class="car-card-premium reveal admin-edit-trigger" style="transition-delay:@(delay)s;position:relative;"
+                             data-car-name="@d.item.TenDong"
+                             data-car-brand="@(brandInfo?.TenHang ?? "")"
+                             data-car-style="@d.item.KieuDang"
+                             data-car-country="@(brandInfo?.QuocGia ?? "")"
+                             data-car-price="@(carPrice.HasValue ? $"{carPrice.Value:N0}đ" : "Liên hệ")"
+                             data-car-stock="@(totalStock <= 0 ? "out" : totalStock <= 5 ? "low" : "in")"
+                             data-car-stock-text="@(totalStock <= 0 ? "Hết hàng" : totalStock <= 5 ? "Sắp hết" : "Còn hàng")"
+                             data-car-img="@(string.IsNullOrEmpty(carImg) ? "" : carImg)"
+                             data-car-count="@(d.item.PhienBanXes?.Count ?? 0)"
+                             data-car-versions="@versionsJson"
+                             data-car-showrooms="@showroomJson"
+                             data-car-detail="/Details/@d.item.MaDong">
+                            @if (isAdminView)
+                            {
+                                <div class="admin-edit-overlay">
+                                    <a href="javascript:void(0)" onclick="openCarsEditorFull(@d.item.MaDong)" class="admin-edit-btn btn-edit" title="Sửa"><i class="fas fa-pen"></i></a>
+                                    <a asp-page="/Admin/DongXe/Delete" asp-route-id="@d.item.MaDong" class="admin-edit-btn btn-delete" title="Xóa"><i class="fas fa-trash"></i></a>
+                                </div>
+                            }
+                            <div class="card-image" onclick="location.href='/Details/@d.item.MaDong'" style="cursor:pointer;background:@(string.IsNullOrEmpty(carImg) ? "var(--brand-dark)" : $"url('{carImg}?v={DateTime.Now.Ticks}') center/cover");">
+                                @if (string.IsNullOrEmpty(carImg))
+                                {
+                                    if (brandInfo != null) { <span class="brand-tag">@brandInfo.TenHang</span> }
+                                    <span class="card-badge">@d.item.KieuDang</span>
+                                    <div class="card-actions">
+                                        <a asp-page="/Details" asp-route-id="@d.item.MaDong" class="action-btn" title="Chi tiết" onclick="event.stopPropagation()"><i class="fas fa-info"></i></a>
+                                    </div>
+                                    <span class="car-icon">@carIcon</span>
+                                }
+                            </div>
+                            <div class="card-body">
+                                <span class="model-series">@(brandInfo?.TenHang ?? "")</span>
+                                <h5>@d.item.TenDong</h5>
+                                @if (firstVer != null)
+                                {
+                                    var stockClass = totalStock <= 0 ? "out" : "in";
+                                    var stockText = totalStock <= 0 ? "Hết hàng" : "Còn hàng";
+                                    <span class="badge-stock @stockClass" style="font-size:0.62rem;margin-top:0.3rem;display:inline-block;">@stockText</span>
+                                }
+                                <div class="quick-specs">
+                                    <span>Kiểu dáng <strong>@d.item.KieuDang</strong></span>
+                                    <span>@(brandInfo?.QuocGia ?? "")</span>
+                                </div>
+                                <div class="price-row">
+                                    <div>
+                                        <div class="price-label">Giá bán lẻ đề xuất</div>
+                                        <div class="price-value">@(carPrice.HasValue ? $"{carPrice.Value:N0}đ" : "Liên hệ")</div>
+                                    </div>
+                                    <a asp-page="/Details" asp-route-id="@d.item.MaDong" class="btn-detail">
+                                        Chi tiết <i class="fas fa-chevron-right ms-1" style="font-size:0.55rem;"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Client-side Pagination -->
+                @if (Model.DongXeList.Any())
+                {
+                    <div class="cars-pagination" id="carsPagination">
+                        <button class="cars-page-btn" id="carsPrevBtn" onclick="carsChangePage(-1)"><i class="fas fa-chevron-left"></i> Trước</button>
+                        <div class="cars-page-info" id="carsPageInfo"></div>
+                        <button class="cars-page-btn" id="carsNextBtn" onclick="carsChangePage(1)">Sau <i class="fas fa-chevron-right"></i></button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Car editor modal (3-tab) -->
+<div class="modal fade" id="carsCarEditorModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content bg-dark text-light border-0 shadow-lg" style="border-radius:16px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold"><i class="fas fa-car me-2"></i> Sửa Thông Tin Xe</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <ul class="nav nav-tabs mb-3" role="tablist">
+                    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#carsTabBrand">Hãng Xe</a></li>
+                    <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#carsTabModel">Dòng Xe</a></li>
+                    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#carsTabVersion">Phiên Bản</a></li>
+                </ul>
+                <div class="tab-content">
+                    <!-- Tab: Hang Xe -->
+                    <div class="tab-pane fade" id="carsTabBrand">
+                        <input type="hidden" id="carsEditBrandId" />
+                        <div class="row g-3">
+                            <div class="col-md-4"><label class="form-label small text-secondary">Tên hãng</label><input type="text" id="carsEditBrandName" class="form-control form-control-dark" /></div>
+                            <div class="col-md-4"><label class="form-label small text-secondary">Quốc gia</label><input type="text" id="carsEditBrandCountry" class="form-control form-control-dark" /></div>
+                            <div class="col-md-4"><label class="form-label small text-secondary">Logo URL</label><input type="url" id="carsEditBrandLogo" class="form-control form-control-dark" placeholder="https://..." /></div>
+                            <div class="col-12 d-flex gap-2 align-items-end"><div class="flex-grow-1"><label class="form-label small text-secondary">Hoặc upload file</label><input type="file" id="carsEditBrandFile" class="form-control form-control-dark" accept="image/*" onchange="openCropModal('carsEditBrandFile','1:1')" /></div><button type="button" class="btn btn-sm btn-outline-light" style="white-space:nowrap;padding:0.55rem 0.8rem;border-radius:10px;font-size:0.7rem;" onclick="openCropModal('carsEditBrandFile','1:1')"><i class="fas fa-crop-alt me-1"></i>Chỉnh sửa</button></div>
+                        </div>
+                        <button onclick="carsSaveBrandFull()" class="btn btn-premium btn-premium-solid w-100 mt-3"><i class="fas fa-save me-2"></i> Lưu Hãng Xe</button>
+                    </div>
+                    <!-- Tab: Dong Xe -->
+                    <div class="tab-pane fade show active" id="carsTabModel">
+                        <input type="hidden" id="carsEditModelId" />
+                        <div class="row g-3">
+                            <div class="col-md-4"><label class="form-label small text-secondary">Hãng xe</label><select id="carsEditModelBrand" class="form-select form-select-dark">
+                                @foreach (var b in Model.HangXeList) { <option value="@b.MaHang">@b.TenHang</option> }
+                            </select></div>
+                            <div class="col-md-4"><label class="form-label small text-secondary">Tên dòng xe</label><input type="text" id="carsEditModelName" class="form-control form-control-dark" /></div>
+                            <div class="col-md-4"><label class="form-label small text-secondary">Kiểu dáng</label><select id="carsEditModelStyle" class="form-select form-select-dark">
+                                <option value="Sedan">Sedan</option><option value="SUV">SUV</option><option value="Hatchback">Hatchback</option><option value="Coupe">Coupe</option><option value="MPV">MPV</option><option value="Pickup">Pickup</option><option value="Van">Van</option>
+                            </select></div>
+                            <div class="col-12"><label class="form-label small text-secondary">Ảnh URL</label><input type="url" id="carsEditModelImage" class="form-control form-control-dark" placeholder="https://..." /></div>
+                            <div class="col-12 d-flex gap-2 align-items-end"><div class="flex-grow-1"><label class="form-label small text-secondary">Hoặc upload file</label><input type="file" id="carsEditModelFile" class="form-control form-control-dark" accept="image/*" onchange="openCropModal('carsEditModelFile','16:9')" /></div><button type="button" class="btn btn-sm btn-outline-light" style="white-space:nowrap;padding:0.55rem 0.8rem;border-radius:10px;font-size:0.7rem;" onclick="openCropModal('carsEditModelFile','16:9')"><i class="fas fa-crop-alt me-1"></i>Chỉnh sửa</button></div>
+                            <div class="col-12">
+                                <label class="form-label small text-secondary">Bộ sưu tập ảnh xe (slide)</label>
+                                <div id="carsEditModelImagesList" class="d-flex flex-wrap gap-2 mb-2"></div>
+                                <div class="d-flex gap-2 align-items-center">
+                                    <div class="flex-grow-1"><input type="file" id="carsEditModelImagesFiles" class="form-control form-control-dark" accept="image/*" multiple onchange="carsUploadModelImages(this.files)" /></div>
+                                </div>
+                                <div class="text-muted mt-1" style="font-size:0.68rem;"><i class="fas fa-info-circle me-1"></i>Ảnh đầu tiên sẽ là ảnh chính hiển thị ngoài danh sách xe. Chọn ảnh và bấm <strong>Đặt chính</strong> để thay đổi.</div>
+                            </div>
+                        </div>
+                        <button onclick="carsSaveModelFull()" class="btn btn-premium btn-premium-solid w-100 mt-3"><i class="fas fa-save me-2"></i> Lưu Dòng Xe</button>
+                    </div>
+                    <!-- Tab: Phien Ban -->
+                    <div class="tab-pane fade" id="carsTabVersion">
+                        <div class="mb-3"><label class="form-label small text-secondary">Chọn phiên bản</label><select id="carsEditVersionSelect" class="form-select form-select-dark" onchange="carsLoadVersionData()"></select></div>
+                        <input type="hidden" id="carsEditVerId" />
+                        <div class="row g-3">
+                            <div class="col-md-4"><label class="form-label small text-secondary">Tên phiên bản</label><input type="text" id="carsEditVerName" class="form-control form-control-dark" /></div>
+                            <div class="col-md-4"><label class="form-label small text-secondary">Giá niêm yết (VND)</label><input type="number" id="carsEditVerPrice" class="form-control form-control-dark" /></div>
+                            <div class="col-md-4"><label class="form-label small text-secondary">Màu sắc</label><input type="text" id="carsEditVerColor" class="form-control form-control-dark" /></div>
+                            <div class="col-md-4"><label class="form-label small text-secondary">Động cơ</label><input type="text" id="carsEditVerEngine" class="form-control form-control-dark" placeholder="e.g. 2.0L Turbo I4" /></div>
+                            <div class="col-md-4"><label class="form-label small text-secondary">Hộp số</label><input type="text" id="carsEditVerTransmission" class="form-control form-control-dark" placeholder="e.g. S-Tronic 7" /></div>
+                            <div class="col-md-4"><label class="form-label small text-secondary">Nhiên liệu</label><select id="carsEditVerFuel" class="form-select form-select-dark">
+                                <option value="Xăng">Xăng</option><option value="Dầu">Dầu</option><option value="Điện">Điện</option><option value="Hybrid">Hybrid</option><option value="Hydro">Hydro</option>
+                            </select></div>
+                            <div class="col-md-4"><label class="form-label small text-secondary">Số lượng kho</label><input type="number" id="carsEditVerStock" class="form-control form-control-dark" min="0" /></div>
+                            <div class="col-md-4"><label class="form-label small text-secondary">Trạng thái</label><select id="carsEditVerStatus" class="form-select form-select-dark">
+                                <option value="Còn hàng">Còn hàng</option><option value="Hết hàng">Hết hàng</option><option value="Đặt trước">Đặt trước</option><option value="Ngừng bán">Ngừng bán</option>
+                            </select></div>
+                            <div class="col-md-4"><label class="form-label small text-secondary">Khuyến mãi</label><input type="text" id="carsEditVerPromo" class="form-control form-control-dark" placeholder="Mã khuyến mãi" /></div>
+                            <div class="col-12"><label class="form-label small text-secondary">Ảnh URL</label><input type="url" id="carsEditVerImage" class="form-control form-control-dark" placeholder="https://..." /></div>
+                            <div class="col-12 d-flex gap-2 align-items-end"><div class="flex-grow-1"><label class="form-label small text-secondary">Hoặc upload file</label><input type="file" id="carsEditVerFile" class="form-control form-control-dark" accept="image/*" onchange="openCropModal('carsEditVerFile','16:9')" /></div><button type="button" class="btn btn-sm btn-outline-light" style="white-space:nowrap;padding:0.55rem 0.8rem;border-radius:10px;font-size:0.7rem;" onclick="openCropModal('carsEditVerFile','16:9')"><i class="fas fa-crop-alt me-1"></i>Chỉnh sửa</button></div>
+                        </div>
+                        <button onclick="carsSaveVersionFull()" class="btn btn-premium btn-premium-solid w-100 mt-3"><i class="fas fa-save me-2"></i> Lưu Phiên Bản</button>
+                    </div>
+                </div>
+                <hr class="border-secondary my-3">
+                <button onclick="carsSaveAllFull()" class="btn btn-premium btn-premium-solid" style="width:100%;padding:0.75rem;border-radius:12px;font-size:0.85rem;letter-spacing:1px;"><i class="fas fa-save me-2"></i> Lưu Tất Cả</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Image Crop Modal -->
+<div class="crop-overlay" id="cropOverlay">
+    <div class="crop-dialog">
+        <div class="crop-header">
+            <h6><i class="fas fa-crop-alt me-2"></i> Chỉnh sửa ảnh</h6>
+            <button class="btn-close-crop" onclick="closeCropModal()">&times;</button>
+        </div>
+        <div class="crop-viewport" id="cropViewport">
+            <img id="cropImage" src="" alt="Crop" />
+            <div class="crop-frame"></div>
+            <div class="crop-guide"></div>
+        </div>
+        <div class="crop-controls">
+            <div class="crop-zoom-row">
+                <label><i class="fas fa-search-plus"></i></label>
+                <input type="range" id="cropZoom" min="10" max="300" value="100" oninput="onCropZoom()" />
+                <span class="zoom-val" id="cropZoomVal">100%</span>
+            </div>
+            <div class="crop-ratio-row">
+                <label>Tỷ lệ:</label>
+                <button class="crop-ratio-btn active" data-ratio="free" onclick="setCropRatio('free',this)">Tự do</button>
+                <button class="crop-ratio-btn" data-ratio="16:9" onclick="setCropRatio('16:9',this)">16:9</button>
+                <button class="crop-ratio-btn" data-ratio="4:3" onclick="setCropRatio('4:3',this)">4:3</button>
+                <button class="crop-ratio-btn" data-ratio="1:1" onclick="setCropRatio('1:1',this)">1:1</button>
+                <button class="crop-ratio-btn" data-ratio="3:2" onclick="setCropRatio('3:2',this)">3:2</button>
+            </div>
+        </div>
+        <div class="crop-actions">
+            <button class="crop-btn-cancel" onclick="closeCropModal()">Hủy</button>
+            <button class="crop-btn-reset" onclick="resetCropPosition()"><i class="fas fa-arrows-alt me-1"></i> Đặt lại</button>
+            <button class="crop-btn-apply" onclick="applyCrop()"><i class="fas fa-check me-1"></i> Áp dụng</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="~/js/car-hover-preview.js" asp-append-version="true"></script>
+<script>
+let _carsVersions = [];
+let _carsImages = [];
+let _carsPage = 1;
+const _carsPerPage = 8;
+
+function carsInitPagination() {
+    const grid = document.getElementById('carsGrid');
+    if (!grid) return;
+    const cards = grid.querySelectorAll('.car-card-premium');
+    const total = cards.length;
+    const totalPages = Math.ceil(total / _carsPerPage);
+    if (totalPages <= 1) {
+        const pag = document.getElementById('carsPagination');
+        if (pag) pag.style.display = 'none';
+        return;
+    }
+    function showPage(page) {
+        _carsPage = Math.max(1, Math.min(page, totalPages));
+        cards.forEach((c, i) => {
+            const inPage = i >= (_carsPage - 1) * _carsPerPage && i < _carsPage * _carsPerPage;
+            c.style.display = inPage ? '' : 'none';
+        });
+        document.getElementById('carsPageInfo').textContent = 'Trang ' + _carsPage + ' / ' + totalPages;
+        document.getElementById('carsPrevBtn').style.opacity = _carsPage <= 1 ? '0.3' : '1';
+        document.getElementById('carsPrevBtn').disabled = _carsPage <= 1;
+        document.getElementById('carsNextBtn').style.opacity = _carsPage >= totalPages ? '0.3' : '1';
+        document.getElementById('carsNextBtn').disabled = _carsPage >= totalPages;
+        grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    window.carsChangePage = function(dir) { showPage(_carsPage + dir); };
+    showPage(1);
+}
+
+document.addEventListener('DOMContentLoaded', carsInitPagination);
+
+/* ========== IMAGE CROP SYSTEM ========== */
+let _cropState = { targetInputId: null, zoom: 1, ratio: 'free', drag: {x:0,y:0}, isDragging: false, imgW: 0, imgH: 0 };
+let _croppedBlobs = {};
+
+const _urlInputMap = {
+    carsEditBrandFile:'carsEditBrandLogo', carsEditModelFile:'carsEditModelImage', carsEditVerFile:'carsEditVerImage'
+};
+
+function openCropModal(inputId, aspectRatio) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    _cropState.targetInputId = inputId;
+    _cropState.ratio = aspectRatio || 'free';
+    _cropState.zoom = 1;
+
+    const overlay = document.getElementById('cropOverlay');
+    const img = document.getElementById('cropImage');
+    const zoomSlider = document.getElementById('cropZoom');
+    zoomSlider.value = 100;
+    document.getElementById('cropZoomVal').textContent = '100%';
+
+    document.querySelectorAll('.crop-ratio-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.ratio === _cropState.ratio);
+    });
+
+    let src = '';
+    if (input.files && input.files.length > 0) {
+        src = URL.createObjectURL(input.files[0]);
+    } else {
+        src = input.value.trim();
+        if (!src) {
+            const urlId = _urlInputMap[inputId];
+            if (urlId) {
+                const urlInput = document.getElementById(urlId);
+                if (urlInput) src = urlInput.value.trim();
+            }
+        }
+    }
+    if (!src) { alert('Vui lòng chọn ảnh hoặc nhập URL trước.'); return; }
+
+    function setCropSrc(url) {
+        img.onload = function() {
+            _cropState.imgW = img.naturalWidth;
+            _cropState.imgH = img.naturalHeight;
+            _cropState.zoom = 1;
+            centerCropDrag();
+            fitCropImage();
+            updateCropFrame();
+        };
+        img.src = url;
+        overlay.classList.add('active');
+    }
+
+    if (src.startsWith('http://') || src.startsWith('https://')) {
+        fetch('/api/image-proxy?url=' + encodeURIComponent(src)).then(r => r.blob()).then(blob => {
+            setCropSrc(URL.createObjectURL(blob));
+        }).catch(() => setCropSrc(src));
+    } else {
+        setCropSrc(src);
+    }
+}
+
+function centerCropDrag() {
+    const vp = document.getElementById('cropViewport');
+    const vw = vp.clientWidth, vh = vp.clientHeight;
+    const iw = _cropState.imgW, ih = _cropState.imgH;
+    if (!iw || !ih) return;
+    const s = Math.min(vw / iw, vh / ih) * 0.9 * _cropState.zoom;
+    _cropState.drag.x = (vw - iw * s) / 2;
+    _cropState.drag.y = (vh - ih * s) / 2;
+}
+
+function fitCropImage() {
+    const viewport = document.getElementById('cropViewport');
+    const img = document.getElementById('cropImage');
+    const vw = viewport.clientWidth, vh = viewport.clientHeight;
+    const iw = _cropState.imgW, ih = _cropState.imgH;
+    if (!iw || !ih) return;
+    let scale = Math.min(vw / iw, vh / ih) * 0.9;
+    img.style.width = (iw * scale * _cropState.zoom) + 'px';
+    img.style.height = (ih * scale * _cropState.zoom) + 'px';
+    img.style.left = _cropState.drag.x + 'px';
+    img.style.top = _cropState.drag.y + 'px';
+}
+
+function onCropZoom() {
+    const val = parseInt(document.getElementById('cropZoom').value);
+    _cropState.zoom = val / 100;
+    document.getElementById('cropZoomVal').textContent = val + '%';
+    fitCropImage();
+}
+
+function resetCropPosition() {
+    _cropState.zoom = 1;
+    centerCropDrag();
+    document.getElementById('cropZoom').value = 100;
+    document.getElementById('cropZoomVal').textContent = '100%';
+    fitCropImage();
+}
+
+function setCropRatio(ratio, btn) {
+    _cropState.ratio = ratio;
+    document.querySelectorAll('.crop-ratio-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    updateCropFrame();
+}
+
+function updateCropFrame() {
+    const viewport = document.getElementById('cropViewport');
+    const frame = viewport.querySelector('.crop-frame');
+    const vw = viewport.clientWidth, vh = viewport.clientHeight;
+    if (_cropState.ratio === 'free') {
+        frame.style.inset = '0';
+    } else {
+        const p = _cropState.ratio.split(':');
+        const rW = parseInt(p[0]), rH = parseInt(p[1]);
+        let fw, fh;
+        if (vw / vh > rW / rH) { fh = vh * 0.85; fw = fh * rW / rH; }
+        else { fw = vw * 0.85; fh = fw * rH / rW; }
+        const top = (vh - fh) / 2, left = (vw - fw) / 2;
+        frame.style.top = top + 'px';
+        frame.style.left = left + 'px';
+        frame.style.right = 'auto';
+        frame.style.bottom = 'auto';
+        frame.style.width = fw + 'px';
+        frame.style.height = fh + 'px';
+    }
+}
+
+function closeCropModal() {
+    document.getElementById('cropOverlay').classList.remove('active');
+}
+
+function applyCrop() {
+    const viewport = document.getElementById('cropViewport');
+    const img = document.getElementById('cropImage');
+    const vw = viewport.clientWidth, vh = viewport.clientHeight;
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    let outW = vw, outH = vh;
+    if (_cropState.ratio !== 'free') {
+        const p = _cropState.ratio.split(':');
+        const rW = parseInt(p[0]), rH = parseInt(p[1]);
+        if (vw / vh > rW / rH) { outH = vh; outW = vh * rW / rH; }
+        else { outW = vw; outH = vw * rH / rW; }
+    }
+    canvas.width = outW;
+    canvas.height = outH;
+
+    const imgRect = img.getBoundingClientRect();
+    const vpRect = viewport.getBoundingClientRect();
+    const sx = (vpRect.left + (vw - outW) / 2 - imgRect.left) / (imgRect.width / _cropState.imgW);
+    const sy = (vpRect.top + (vh - outH) / 2 - imgRect.top) / (imgRect.height / _cropState.imgH);
+    const sw = outW / (imgRect.width / _cropState.imgW);
+    const sh = outH / (imgRect.height / _cropState.imgH);
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, outW, outH);
+
+    canvas.toBlob(function(blob) {
+        if (blob && _cropState.targetInputId) {
+            _croppedBlobs[_cropState.targetInputId] = blob;
+        }
+        closeCropModal();
+        showToast('Đã áp dụng crop! Tiếp tục bấm Lưu.','success');
+    }, 'image/jpeg', 0.92);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const vp = document.getElementById('cropViewport');
+    if (!vp) return;
+    let startX, startY, sdx, sdy;
+    vp.addEventListener('mousedown', e => {
+        e.preventDefault();
+        _cropState.isDragging = true;
+        startX = e.clientX; startY = e.clientY;
+        sdx = _cropState.drag.x; sdy = _cropState.drag.y;
+    });
+    document.addEventListener('mousemove', e => {
+        if (!_cropState.isDragging) return;
+        _cropState.drag.x = sdx + (e.clientX - startX);
+        _cropState.drag.y = sdy + (e.clientY - startY);
+        fitCropImage();
+    });
+    document.addEventListener('mouseup', () => { _cropState.isDragging = false; });
+    vp.addEventListener('wheel', e => {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? -10 : 10;
+        let val = parseInt(document.getElementById('cropZoom').value) + delta;
+        val = Math.max(10, Math.min(300, val));
+        document.getElementById('cropZoom').value = val;
+        _cropState.zoom = val / 100;
+        document.getElementById('cropZoomVal').textContent = val + '%';
+        fitCropImage();
+    }, { passive: false });
+});
+
+async function carsUploadFile(file, inputId) {
+    let blob = (inputId && _croppedBlobs[inputId]) ? _croppedBlobs[inputId] : file;
+    const formData = new FormData();
+    formData.append('file', blob, blob.name || 'cropped.jpg');
+    try {
+        const res = await fetch('/api/admin/upload', { method: 'POST', body: formData });
+        if (!res.ok) throw new Error(res.statusText);
+        const data = await res.json();
+        if (inputId) delete _croppedBlobs[inputId];
+        return data.url;
+    } catch (e) { showToast('Upload thất bại. Thử dán URL ảnh thay thế.', 'error'); return null; }
+}
+
+function carsFileOrCrop(fileInput, inputId) {
+    if (fileInput.files.length > 0) return fileInput.files[0];
+    const b = _croppedBlobs[inputId];
+    return b ? new File([b], 'cropped.jpg', { type: 'image/jpeg' }) : null;
+}
+
+function showToast(msg, type) {
+    const c = document.getElementById('toastContainer');
+    if (!c) return;
+    const el = document.createElement('div');
+    el.className = 'toast-item toast-visible' + (type === 'error' ? ' toast-error' : '');
+    el.innerHTML = '<div class="toast-icon">' + (type === 'error' ? '<i class="fas fa-exclamation-circle"></i>' : '<i class="fas fa-check-circle"></i>') + '</div>'
+        + '<div class="toast-body"><div class="toast-title">' + (type === 'error' ? 'Lỗi' : 'Thành công') + '</div><div class="toast-msg">' + msg + '</div></div>'
+        + '<button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>'
+        + '<div class="toast-progress"><div class="toast-progress-bar" style="animation:toastProgress 3s linear forwards;"></div></div>';
+    c.appendChild(el);
+    setTimeout(() => { el.classList.add('toast-hide'); setTimeout(() => el.remove(), 400); }, 3000);
+}
+
+async function carsApiPost(url, payload) {
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) throw new Error(data.error || res.statusText);
+    return data;
+}
+
+function renderCarsModelImages() {
+    const list = document.getElementById('carsEditModelImagesList');
+    if (!list) return;
+    if (!_carsImages.length) {
+        list.innerHTML = '<span class="text-muted" style="font-size:0.72rem;">Chưa có ảnh nào.</span>';
+        return;
+    }
+    list.innerHTML = _carsImages.map(function (img) {
+        return '<div class="position-relative" style="width:80px;height:56px;border-radius:8px;overflow:hidden;border:2px solid ' + (img.laChinh ? 'var(--brand-gold)' : 'rgba(255,255,255,0.1)') + ';">'
+            + '<img src="' + img.duongDanAnh + '" alt="" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.visibility=\'hidden\';" />'
+            + (img.laChinh ? '<span style="position:absolute;top:2px;left:2px;background:var(--brand-gold);color:#000;font-size:0.6rem;padding:0 4px;border-radius:4px;font-weight:700;"><i class="fas fa-star"></i></span>' : '')
+            + '<div class="d-flex" style="position:absolute;bottom:2px;right:2px;gap:3px;">'
+            + (img.laChinh ? '' : '<button type="button" class="btn btn-dark btn-sm p-0" style="width:20px;height:20px;font-size:0.6rem;border-radius:4px;opacity:0.9;" title="Đặt ảnh chính" onclick="carsSetMainImage(' + img.maHinhAnh + ')"><i class="fas fa-star"></i></button>')
+            + '<button type="button" class="btn btn-danger btn-sm p-0" style="width:20px;height:20px;font-size:0.6rem;border-radius:4px;opacity:0.9;" title="Xoá ảnh" onclick="carsDeleteImage(' + img.maHinhAnh + ')"><i class="fas fa-trash"></i></button>'
+            + '</div></div>';
+    }).join('');
+}
+
+async function carsUploadModelImages(files) {
+    if (!files || !files.length) return;
+    const maDong = parseInt(document.getElementById('carsEditModelId').value);
+    if (!maDong) { showToast('Chưa có mã dòng xe', 'error'); return; }
+    try {
+        const formData = new FormData();
+        for (const f of files) formData.append('files', f);
+        const res = await fetch('/api/admin/dongxe/images/upload', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (!res.ok || !data.urls || !data.urls.length) throw new Error(data.error || 'Upload thất bại');
+        const existing = _carsImages.map(i => ({ duongDanAnh: i.duongDanAnh, laChinh: i.laChinh }));
+        for (const url of data.urls) existing.push({ duongDanAnh: url, laChinh: false });
+        const saved = await carsApiPost('/api/admin/dongxe/images/save', { maDong: maDong, images: existing });
+        _carsImages = saved.images || [];
+        document.getElementById('carsEditModelImagesFiles').value = '';
+        renderCarsModelImages();
+        showToast('Đã thêm ' + data.urls.length + ' ảnh!');
+    } catch (e) { showToast('Lỗi upload ảnh: ' + e.message, 'error'); }
+}
+
+async function carsSetMainImage(maHinhAnh) {
+    try {
+        const res = await carsApiPost('/api/admin/dongxe/images/setmain', { maHinhAnh: maHinhAnh });
+        _carsImages = res.images || _carsImages.map(i => ({ ...i, laChinh: i.maHinhAnh === maHinhAnh }));
+        renderCarsModelImages();
+        showToast('Đã đặt ảnh chính!');
+    } catch (e) { showToast('Lỗi: ' + e.message, 'error'); }
+}
+
+async function carsDeleteImage(maHinhAnh) {
+    if (!confirm('Xoá ảnh này?')) return;
+    try {
+        const res = await carsApiPost('/api/admin/dongxe/images/delete', { maHinhAnh: maHinhAnh });
+        _carsImages = res.images || [];
+        renderCarsModelImages();
+        showToast('Đã xoá ảnh!');
+    } catch (e) { showToast('Lỗi xoá ảnh: ' + e.message, 'error'); }
+}
+/* ======================================== */
+
+function openCarsEditorFull(id) {
+    fetch('/api/admin/dongxe/' + id).then(r=>r.json()).then(d=>{
+        _carsVersions = d.versions || [];
+        _carsImages = d.images || [];
+        if (d.brand) {
+            document.getElementById('carsEditBrandId').value = d.brand.maHang;
+            document.getElementById('carsEditBrandName').value = d.brand.tenHang;
+            document.getElementById('carsEditBrandCountry').value = d.brand.quocGia;
+            document.getElementById('carsEditBrandLogo').value = d.brand.duongDanLogo || '';
+        }
+        document.getElementById('carsEditModelId').value = d.maDong;
+        document.getElementById('carsEditModelName').value = d.tenDong;
+        document.getElementById('carsEditModelBrand').value = d.maHang;
+        document.getElementById('carsEditModelStyle').value = d.kieuDang;
+        document.getElementById('carsEditModelImage').value = d.duongDanAnh || '';
+        renderCarsModelImages();
+        const sel = document.getElementById('carsEditVersionSelect');
+        sel.innerHTML = '';
+        _carsVersions.forEach((v,i) => {
+            const opt = document.createElement('option');
+            opt.value = i; opt.text = v.tenPhienBan + ' - ' + (v.giaNiemYet ? v.giaNiemYet.toLocaleString('vi-VN') + 'đ' : 'Liên hệ');
+            sel.appendChild(opt);
+        });
+        if (_carsVersions.length > 0) carsLoadVersionData();
+        const modal = new bootstrap.Modal(document.getElementById('carsCarEditorModal'));
+        modal.show();
+    });
+}
+
+function carsLoadVersionData() {
+    const idx = parseInt(document.getElementById('carsEditVersionSelect').value);
+    const v = _carsVersions[idx];
+    if (!v) return;
+    document.getElementById('carsEditVerId').value = v.maPhienBan;
+    document.getElementById('carsEditVerName').value = v.tenPhienBan;
+    document.getElementById('carsEditVerPrice').value = v.giaNiemYet || '';
+    document.getElementById('carsEditVerColor').value = v.mauSac || '';
+    document.getElementById('carsEditVerEngine').value = v.dongCo || '';
+    document.getElementById('carsEditVerTransmission').value = v.hopSo || '';
+    document.getElementById('carsEditVerFuel').value = v.loaiNhietLieu || 'Xăng';
+    document.getElementById('carsEditVerStock').value = v.soLuongTrongKho || 0;
+    document.getElementById('carsEditVerStatus').value = v.trangThai || 'Còn hàng';
+    document.getElementById('carsEditVerPromo').value = v.maKhuyenMai || '';
+    document.getElementById('carsEditVerImage').value = v.duongDanAnh || '';
+}
+
+async function carsSaveBrandFull() {
+    try {
+        const id = document.getElementById('carsEditBrandId').value;
+        const urlInput = document.getElementById('carsEditBrandLogo');
+        const fileInput = document.getElementById('carsEditBrandFile');
+        let url = urlInput.value.trim();
+        { const f = carsFileOrCrop(fileInput, 'carsEditBrandFile'); if (f) url = await carsUploadFile(f, 'carsEditBrandFile'); }
+        const payload = {
+            maHang: parseInt(id),
+            tenHang: document.getElementById('carsEditBrandName').value.trim(),
+            quocGia: document.getElementById('carsEditBrandCountry').value.trim(),
+            duongDanLogo: url || null
+        };
+        console.log('Cars saving brand:', payload);
+        const brandRes = await carsApiPost('/api/admin/hangxe/save', payload);
+        console.log('Cars brand save response:', brandRes);
+        showToast('Đã lưu hãng xe!');
+        setTimeout(() => location.reload(true), 1500);
+    } catch (e) { showToast('Lỗi lưu hãng xe: ' + e.message, 'error'); console.error(e); }
+}
+
+async function carsSaveModelFull() {
+    try {
+        const id = document.getElementById('carsEditModelId').value;
+        const urlInput = document.getElementById('carsEditModelImage');
+        const fileInput = document.getElementById('carsEditModelFile');
+        let url = urlInput.value.trim();
+        { const f = carsFileOrCrop(fileInput, 'carsEditModelFile'); if (f) url = await carsUploadFile(f, 'carsEditModelFile'); }
+        const payload = {
+            maDong: parseInt(id),
+            tenDong: document.getElementById('carsEditModelName').value.trim(),
+            maHang: parseInt(document.getElementById('carsEditModelBrand').value),
+            kieuDang: document.getElementById('carsEditModelStyle').value,
+            duongDanAnh: url || null
+        };
+        console.log('Cars saving model:', payload);
+        const modelRes = await carsApiPost('/api/admin/dongxe/save', payload);
+        console.log('Cars model save response:', modelRes);
+        showToast('Đã lưu dòng xe!');
+        setTimeout(() => location.reload(true), 1500);
+    } catch (e) { showToast('Lỗi lưu dòng xe: ' + e.message, 'error'); console.error(e); }
+}
+
+async function carsSaveVersionFull() {
+    try {
+        const id = document.getElementById('carsEditVerId').value;
+        const urlInput = document.getElementById('carsEditVerImage');
+        const fileInput = document.getElementById('carsEditVerFile');
+        let url = urlInput.value.trim();
+        { const f = carsFileOrCrop(fileInput, 'carsEditVerFile'); if (f) url = await carsUploadFile(f, 'carsEditVerFile'); }
+        const payload = {
+            maPhienBan: parseInt(id),
+            tenPhienBan: document.getElementById('carsEditVerName').value.trim(),
+            giaNiemYet: parseInt(document.getElementById('carsEditVerPrice').value) || 0,
+            mauSac: document.getElementById('carsEditVerColor').value.trim(),
+            dongCo: document.getElementById('carsEditVerEngine').value.trim(),
+            hopSo: document.getElementById('carsEditVerTransmission').value.trim(),
+            loaiNhietLieu: document.getElementById('carsEditVerFuel').value,
+            soLuongTrongKho: parseInt(document.getElementById('carsEditVerStock').value) || 0,
+            trangThai: document.getElementById('carsEditVerStatus').value,
+            maKhuyenMai: document.getElementById('carsEditVerPromo').value.trim() || null,
+            duongDanAnh: url || null
+        };
+        console.log('Cars saving version:', payload);
+        const verRes = await carsApiPost('/api/admin/phienban/save', payload);
+        console.log('Cars version save response:', verRes);
+        showToast('Đã lưu phiên bản!');
+        setTimeout(() => location.reload(true), 1500);
+    } catch (e) { showToast('Lỗi lưu phiên bản: ' + e.message, 'error'); console.error(e); }
+}
+
+async function carsSaveAllFull() {
+    try {
+        const brandUrlInput = document.getElementById('carsEditBrandLogo');
+        const brandFileInput = document.getElementById('carsEditBrandFile');
+        let brandUrl = brandUrlInput.value.trim();
+        { const f = carsFileOrCrop(brandFileInput, 'carsEditBrandFile'); if (f) brandUrl = await carsUploadFile(f, 'carsEditBrandFile'); }
+
+        const modelUrlInput = document.getElementById('carsEditModelImage');
+        const modelFileInput = document.getElementById('carsEditModelFile');
+        let modelUrl = modelUrlInput.value.trim();
+        { const f = carsFileOrCrop(modelFileInput, 'carsEditModelFile'); if (f) modelUrl = await carsUploadFile(f, 'carsEditModelFile'); }
+
+        const verUrlInput = document.getElementById('carsEditVerImage');
+        const verFileInput = document.getElementById('carsEditVerFile');
+        let verUrl = verUrlInput.value.trim();
+        { const f = carsFileOrCrop(verFileInput, 'carsEditVerFile'); if (f) verUrl = await carsUploadFile(f, 'carsEditVerFile'); }
+
+        const brandPayload = {
+            maHang: parseInt(document.getElementById('carsEditBrandId').value),
+            tenHang: document.getElementById('carsEditBrandName').value.trim(),
+            quocGia: document.getElementById('carsEditBrandCountry').value.trim(),
+            duongDanLogo: brandUrl || null
+        };
+        const modelPayload = {
+            maDong: parseInt(document.getElementById('carsEditModelId').value),
+            tenDong: document.getElementById('carsEditModelName').value.trim(),
+            maHang: parseInt(document.getElementById('carsEditModelBrand').value),
+            kieuDang: document.getElementById('carsEditModelStyle').value,
+            duongDanAnh: modelUrl || null
+        };
+        const verId = document.getElementById('carsEditVerId').value;
+        let versionPayload = null;
+        if (verId) {
+            versionPayload = {
+                maPhienBan: parseInt(verId),
+                tenPhienBan: document.getElementById('carsEditVerName').value.trim(),
+                giaNiemYet: parseInt(document.getElementById('carsEditVerPrice').value) || 0,
+                mauSac: document.getElementById('carsEditVerColor').value.trim(),
+                dongCo: document.getElementById('carsEditVerEngine').value.trim(),
+                hopSo: document.getElementById('carsEditVerTransmission').value.trim(),
+                loaiNhietLieu: document.getElementById('carsEditVerFuel').value,
+                soLuongTrongKho: parseInt(document.getElementById('carsEditVerStock').value) || 0,
+                trangThai: document.getElementById('carsEditVerStatus').value,
+                maKhuyenMai: document.getElementById('carsEditVerPromo').value.trim() || null,
+                duongDanAnh: verUrl || null
+            };
+        }
+
+        console.log('Cars saving all - brand:', brandPayload, 'model:', modelPayload, 'version:', versionPayload);
+        await carsApiPost('/api/admin/hangxe/save', brandPayload);
+        await carsApiPost('/api/admin/dongxe/save', modelPayload);
+        if (versionPayload) await carsApiPost('/api/admin/phienban/save', versionPayload);
+        console.log('Cars all saved successfully');
+        showToast('Đã lưu tất cả!');
+        setTimeout(() => location.reload(true), 1500);
+    } catch (e) { showToast('Lỗi lưu: ' + e.message, 'error'); console.error(e); }
+}
+</script>
+}

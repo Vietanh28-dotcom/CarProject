@@ -1,0 +1,149 @@
+@page
+@model CarProject.Pages.Admin.Users.IndexModel
+@{
+    ViewData["Title"] = "Quản lý người dùng";
+}
+
+<div class="container-fluid db-wrap">
+    <div class="db-toolbar">
+        <div>
+            <h1 class="db-title">Quản lý người dùng</h1>
+            <div class="db-subtitle">Tổng cộng @Model.Users.Count tài khoản · Dashboard quản trị</div>
+        </div>
+        <a asp-page="/Admin/Index" class="db-btn-ghost" title="Về Dashboard">
+            <i class="fas fa-arrow-left me-1"></i> Về Dashboard
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">@TempData["Success"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">@TempData["Error"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    }
+
+    @if (Model.Users.Count == 0)
+    {
+        <div class="alert alert-info">Không có tài khoản nào.</div>
+    }
+    else
+    {
+        <div class="db-card">
+            <div class="db-table-responsive">
+                <table class="db-table" style="min-width:1200px;">
+                    <colgroup>
+                        <col style="width:80px" />
+                        <col style="width:160px" />
+                        <col style="width:160px" />
+                        <col style="width:220px" />
+                        <col style="width:120px" />
+                        <col style="width:180px" />
+                        <col style="width:110px" />
+                        <col style="width:160px" />
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tên đăng nhập</th>
+                            <th>Tên hiển thị</th>
+                            <th>Email</th>
+                            <th>Vai trò</th>
+                            <th>Chi nhánh</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model.Users)
+                        {
+                            var showroomName = Model.UserShowroomMap.GetValueOrDefault(user.TenDangNhap);
+                            <tr>
+                                <td><span class="db-id">@user.MaTaiKhoan</span></td>
+                                <td><div class="db-name">@user.TenDangNhap</div></td>
+                                <td><div class="db-sub">@(user.TenHienThi ?? "—")</div></td>
+                                <td><div class="db-sub">@(user.Email ?? "—")</div></td>
+                                <td>
+                                    <span class="db-badge @(user.VaiTro == "Admin" ? "red" : user.VaiTro == "Quản Lý" ? "yellow" : "gray")">@user.VaiTro</span>
+                                </td>
+                                <td>
+                                    @if (user.VaiTro == "Quản Lý")
+                                    {
+                                        <form method="post" asp-page-handler="AssignShowroom">
+                                            <input type="hidden" name="tenDangNhap" value="@user.TenDangNhap" />
+                                            <select name="maChiNhanh" class="form-select form-select-sm d-inline w-auto" onchange="this.form.submit()" style="font-size:0.75rem;">
+                                                <option value="">— Chưa phân —</option>
+                                                @foreach (var cn in Model.DanhSachChiNhanh)
+                                                {
+                                                    <option value="@cn.MaChiNhanh" selected="@(showroomName == cn.TenChiNhanh)">
+                                                        @cn.TenChiNhanh
+                                                    </option>
+                                                }
+                                            </select>
+                                        </form>
+                                    }
+                                    else if (showroomName != null)
+                                    {
+                                        <div class="db-sub">@showroomName</div>
+                                    }
+                                    else
+                                    {
+                                        <div class="db-sub">—</div>
+                                    }
+                                </td>
+                                <td>
+                                    @if (user.TrangThai == "Banned")
+                                    {
+                                        <span class="db-badge red">Bị khóa</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="db-badge green">Hoạt động</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="db-actions">
+                                        @if (user.VaiTro != "Admin")
+                                        {
+                                            <form method="post" asp-page-handler="UpdateRole">
+                                                <input type="hidden" name="tenDangNhap" value="@user.TenDangNhap" />
+                                                <select name="vaiTroMoi" class="form-select form-select-sm d-inline w-auto" onchange="this.form.submit()" style="font-size:0.75rem;">
+                                                    <option value="User" selected="@(user.VaiTro == "User")">User</option>
+                                                    <option value="Quản Lý" selected="@(user.VaiTro == "Quản Lý")">Quản Lý</option>
+                                                </select>
+                                            </form>
+
+                                            @if (user.TrangThai == "Banned")
+                                            {
+                                                <form method="post" asp-page-handler="Unban">
+                                                    <input type="hidden" name="tenDangNhap" value="@user.TenDangNhap" />
+                                                    <button type="submit" class="db-act ok" title="Mở khóa"><i class="fas fa-unlock"></i></button>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                <form method="post" asp-page-handler="Ban">
+                                                    <input type="hidden" name="tenDangNhap" value="@user.TenDangNhap" />
+                                                    <button type="submit" class="db-act no" title="Khóa" onclick="return confirm('Khóa tài khoản @user.TenDangNhap?')"><i class="fas fa-lock"></i></button>
+                                                </form>
+                                            }
+                                            <form method="post" asp-page-handler="Delete">
+                                                <input type="hidden" name="tenDangNhap" value="@user.TenDangNhap" />
+                                                <button type="submit" class="db-act del" title="Xóa" onclick="return confirm('Xóa HOÀN TOÀN tài khoản @user.TenDangNhap?\nTất cả dữ liệu liên quan (nhật ký, đơn cọc, lịch hẹn, banner) cũng sẽ bị xóa.\nHành động này KHÔNG THỂ hoàn tác!')"><i class="fas fa-trash-alt"></i></button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <div class="db-sub">—</div>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

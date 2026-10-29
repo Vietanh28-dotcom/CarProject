@@ -1,0 +1,908 @@
+﻿@page
+@model CarProject.Pages.QuanLy.DonCocModel
+@{
+    ViewData["Title"] = "Quản lý đơn cọc";
+    Layout = "_Layout";
+}
+
+<style>
+    .ql-header { background: linear-gradient(135deg, #0d0d14, #161b2e); color: #fff; padding: 2rem 0; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .ql-card { background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; box-shadow: 0 8px 30px rgba(0,0,0,0.35); padding: 1.5rem; color: #fff; }
+    .badge-waiting { background: rgba(245,158,11,0.18); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+    .badge-confirmed { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+    .badge-rejected { background: rgba(239,68,68,0.16); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+    .badge-completed { background: rgba(99,102,241,0.16); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); }
+    .badge-cancelled { background: rgba(168,85,247,0.16); color: #d8b4fe; border: 1px solid rgba(168,85,247,0.3); }
+
+    /* ---- chủ đề tối cho khu vực quản lý ---- */
+    .ql-card .table { --bs-table-bg: transparent; --bs-table-color: #e6e6ea; --bs-table-border-color: rgba(255,255,255,0.08); }
+    .ql-card .table-hover > tbody > tr:hover > * { background-color: rgba(255,255,255,0.05); color: #fff; }
+    .ql-card .table thead th { color: rgba(255,255,255,0.55); font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.12); }
+    .ql-card .table td { border-color: rgba(255,255,255,0.06); vertical-align: middle; }
+    .ql-card .bi, .ql-card .fas { }
+    .ql-dark-sub { color: rgba(255,255,255,0.55) !important; }
+    .ql-dark-box { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 0.5rem; }
+    .ql-card .btn-close { filter: invert(1); }
+    .ql-bordered { border:1px solid rgba(255,255,255,0.1); border-radius:8px; background:rgba(255,255,255,0.03); }
+    .ql-muted { color: rgba(255,255,255,0.6); }
+    .ql-strong { color: #fff; font-weight: 600; }
+    .ql-danger { color: #f87171; }
+    .ql-link { color:#93c5fd; }
+    .ql-link:hover { color:#bfdbfe; }
+    /* giữ nền tối + chữ trắng sáng cho bảng QL — bất kể theme tối/sáng */
+    .ql-card { background:#0d0d14 !important; color:#fff !important; box-shadow:0 8px 30px rgba(0,0,0,0.35) !important; }
+    .ql-card table, .ql-card .table, .ql-card .table-responsive, .ql-card .table-responsive .table { background:transparent !important; }
+    .ql-card table { --bs-table-bg:transparent !important; --bs-table-color:#fff !important; --bs-table-border-color:rgba(255,255,255,0.08) !important; }
+    .ql-card table th, .ql-card table td, .ql-card .table-responsive th, .ql-card .table-responsive td,
+.ql-card .ql-strong, .ql-card .ql-muted, .ql-card h5, .ql-card h6, .ql-header, .ql-card .text-muted { color:#fff !important; background:transparent !important; border-color:rgba(255,255,255,0.08) !important; }
+    /* chế độ sáng: nền xám + chữ đen cho khu vực QL */
+    [data-theme="light"] .ql-card { background:#e9ebee !important; color:#1a1a1a !important; box-shadow:0 8px 30px rgba(0,0,0,0.1) !important; border-color:#d5d7db !important; }
+    [data-theme="light"] .ql-card table { --bs-table-bg:transparent !important; --bs-table-color:#1a1a1a !important; --bs-table-border-color:#dadce0 !important; }
+    [data-theme="light"] .ql-card table th, [data-theme="light"] .ql-card table td,
+    [data-theme="light"] .ql-card .table-responsive th, [data-theme="light"] .ql-card .table-responsive td,
+    [data-theme="light"] .ql-card .ql-strong, [data-theme="light"] .ql-card .ql-muted,
+    [data-theme="light"] .ql-card h5, [data-theme="light"] .ql-card h6,
+    [data-theme="light"] .ql-card .text-muted { color:#1a1a1a !important; background:transparent !important; border-color:#dadce0 !important; }
+    [data-theme="light"] .ql-card .ql-link { color:#1d4ed8 !important; }
+    [data-theme="light"] .ql-card table a { color:#1d4ed8 !important; }
+    /* overrides form/alert/modal */
+    .ql-card .form-control, .ql-card .form-select, .ql-modal .form-control, .ql-modal .form-select,
+    .ql-modal .input-group-text {
+        background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14);
+        color: #fff; color-scheme: dark;
+    }
+    .ql-card .form-control::placeholder, .ql-modal .form-control::placeholder { color: rgba(255,255,255,0.4); }
+    .ql-card .input-group-text { background: rgba(255,255,255,0.08); color: #fff; }
+    .ql-card .form-select option, .ql-modal .form-select option { background: #161a26; color: #fff; }
+    .ql-alert-success { background: rgba(34,197,94,0.14); border:1px solid rgba(34,197,94,0.3); color:#86efac; }
+    .ql-alert-warn { background: rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.3); color:#fcd34d; }
+    .ql-modal .modal-content { background: #161a26; color:#fff; border:1px solid rgba(255,255,255,0.1); }
+    .ql-modal .modal-header { border-bottom:1px solid rgba(255,255,255,0.08); }
+    .ql-modal .modal-footer { border-top:1px solid rgba(255,255,255,0.08); }
+    .ql-modal .btn-secondary { background:#2a2f40; border-color:#3a4056; color:#fff; }
+    .ql-modal .form-label { color:#e6e6ea; }
+    .ql-modal .text-muted { color: rgba(255,255,255,0.5) !important; }
+</style>
+
+<div class="ql-header">
+    <div class="container">
+        <h1 style="font-size: 1.5rem; font-weight: 600; margin: 0;">
+            <i class="fas fa-file-invoice me-2"></i> Quản lý đơn cọc
+        </h1>
+        @if (Model.Showroom != null)
+        {
+            <p class="mb-0 mt-1" style="opacity: 0.7;">Showroom: <strong>@Model.Showroom.TenChiNhanh</strong></p>
+        }
+    </div>
+</div>
+
+<div class="container" style="padding-bottom: 3rem;">
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <div class="alert ql-alert-success">@Model.SuccessMessage</div>
+    }
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert ql-alert-warn">@Model.ErrorMessage</div>
+    }
+
+    @if (Model.Showroom != null)
+    {
+        <div class="ql-card mb-3" style="padding:1rem 1.5rem;">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-4">
+                    <div class="ql-muted" style="font-size:0.75rem;"><i class="fas fa-store me-1"></i> Showroom gặp mặt</div>
+                    <div class="ql-strong">@Model.Showroom.TenChiNhanh</div>
+                </div>
+                <div class="col-md-5">
+                    <div class="ql-muted" style="font-size:0.75rem;"><i class="fas fa-map-marker-alt me-1"></i> Địa chỉ</div>
+                    <div class="ql-strong">@Model.Showroom.DiaChi, @Model.Showroom.ThanhPho</div>
+                </div>
+                <div class="col-md-3">
+                    <div class="ql-muted" style="font-size:0.75rem;"><i class="fas fa-phone me-1"></i> Hotline</div>
+                    <div class="ql-strong"><a class="ql-link" href="tel:@Model.Showroom.DuongDayNong">@Model.Showroom.DuongDayNong</a></div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @{
+        // Yêu cầu điều chuyển mà showroom của TÔI là NGUỒN (tôi phải Xác nhận/Từ chối).
+        // Đơn của các yêu cầu này có thể thuộc showroom ĐÍCH → không nằm trong DanhSachDonCoc của tôi,
+        // nên hiển thị thành section độc lập (tránh bị "chỉ nhận thông báo, không thấy nút xác nhận").
+        var maDonsToiQuanLy = Model.DanhSachDonCoc.Select(x => x.MaDonCoc).ToHashSet();
+        var ycDenCanXuLy = Model.DanhSachYeuCauDen
+            .Where(y => y.TrangThai == "Chờ xác nhận")
+            .Where(y => !maDonsToiQuanLy.Contains(y.MaDonCoc))
+            .OrderByDescending(y => y.NgayGui)
+            .ToList();
+    }
+
+    @if (ycDenCanXuLy.Any())
+    {
+        <div class="ql-card mb-3" style="padding:1rem 1.5rem;">
+            <h5 style="margin:0 0 0.75rem;"><i class="fas fa-truck-moving me-2 text-warning"></i> Yêu cầu điều chuyển đến showroom của bạn</h5>
+            <small class="ql-muted d-block mb-3" style="font-size:0.8rem;">Showroom khác cần xe từ showroom của bạn. Hãy Xác nhận để chuyển xe, hoặc Từ chối (bắt buộc nhập lý do).</small>
+            @foreach (var yc in ycDenCanXuLy)
+            {
+                var ycTen = $"{yc.ChiTiet?.PhienBan?.DongXe?.TenDong ?? ""} {yc.ChiTiet?.PhienBan?.TenPhienBan ?? ""}".Trim();
+                var donOfYc = Model.DanhSachDonCoc.FirstOrDefault(d => d.MaDonCoc == yc.MaDonCoc);
+                var donStatusText = donOfYc != null
+                    ? $"<strong>#@yc.MaDonCoc</strong>"
+                    : $"<strong>#@yc.MaDonCoc</strong> <small class='ql-muted'>(thuộc showroom khác)</small>";
+                <div class="ql-bordered mb-2" style="padding:0.75rem;border-left:4px solid #fbbf24;">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <div>
+                            <div><strong class="ql-strong">@ycTen</strong> <span class="text-warning">x@(yc.SoLuong) xe</span></div>
+                            <div class="ql-muted" style="font-size:0.75rem;">
+                                Yêu cầu từ: <strong class="ql-strong">@(yc.ChiNhanhDich?.TenChiNhanh ?? yc.MaChiNhanhDich)</strong>
+                                → showroom của bạn (@(yc.ChiNhanhNguon?.TenChiNhanh ?? yc.MaChiNhanhNguon)) ·
+                                Đơn cọc @Html.Raw(donStatusText) · Gửi lúc @yc.NgayGui.ToString("dd/MM/yyyy HH:mm")
+                            </div>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2" id="yc-@yc.MaYeuCau">
+                            <form method="post" asp-page-handler="XacNhanDieuChuyen" onsubmit="return confirm('Xác nhận điều chuyển @yc.SoLuong xe này? Xe sẽ được chuyển sang showroom đích.');">
+                                <input type="hidden" name="maYeuCau" value="@yc.MaYeuCau" />
+                                <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-check"></i> Xác nhận điều chuyển</button>
+                            </form>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="openTuChoiDieuChuyen(@yc.MaYeuCau, '@(ycTen.Replace("'", "\\'"))', '@(yc.ChiNhanhDich?.TenChiNhanh ?? yc.MaChiNhanhDich)')">
+                                <i class="fas fa-times"></i> Từ chối
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    @if (!Model.DanhSachDonCoc.Any())
+    {
+        <div class="text-center py-5">
+            <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.2;"><i class="fas fa-file-invoice"></i></div>
+            <h4 style="color: #e6e6ea;">Chưa có đơn cọc nào</h4>
+        </div>
+    }
+    else
+    {
+        <div class="ql-card">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Khách hàng</th>
+                            <th>Xe</th>
+                            <th>Tiền cọc</th>
+                            <th>Ngày tạo</th>
+                            <th>Trạng thái</th>
+                            <th>Vị trí thu cọc</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var d in Model.DanhSachDonCoc)
+                        {
+                            <tr>
+                                <td>#@d.MaDonCoc</td>
+                                <td><strong>@d.HoTen</strong><br><small class="text-muted">@d.SoDienThoai</small></td>
+                                <td>
+                                    @foreach (var ct in d.ChiTiets)
+                                    {
+                                        var ctTen = $"{ct.PhienBan?.DongXe?.TenDong ?? ""} {ct.PhienBan?.TenPhienBan ?? ""}".Trim();
+                                        var isMine = ct.MaChiNhanh == Model.Showroom?.MaChiNhanh;
+                                        var tienNhanBadge = ct.TrangThaiTiepNhan switch
+                                        {
+                                            "Đã tiếp nhận" => "<span class='badge badge-confirmed'>Đã tiếp nhận</span>",
+                                            "Từ chối" => $"<span class='badge badge-rejected'>Từ chối</span><br><small class='text-muted'>{(ct.LyDoTuChoi ?? "")}</small>",
+                                            _ => "<span class='badge badge-waiting'>Chờ xác nhận</span>"
+                                        };
+<div class="ql-bordered" style="padding:0.5rem;margin-bottom:0.4rem;">
+                                            <div>@ctTen <small class="text-muted">x@(ct.SoLuong)</small> @Html.Raw(tienNhanBadge)</div>
+                                            <div class="ql-muted" style="font-size:0.7rem;">Showroom: @(ct.ChiNhanh?.TenChiNhanh ?? ct.MaChiNhanh)@(isMine ? " (của bạn)" : "")</div>
+                                            @if (ct.SoLuongThieu > 0)
+                                            {
+                                                <div class="ql-danger" style="font-size:0.72rem;">
+                                                    Cần nhập thêm: <strong>@ct.SoLuongThieu xe</strong>
+                                                    @if (ct.DaNhapKho)
+                                                    {
+                                                        <span class="badge badge-confirmed">Đã nhập đủ</span>
+                                                    }
+                                                </div>
+                                            }
+                                            @if (isMine && ct.TrangThaiTiepNhan == "Chờ xác nhận" && (d.PhuongThucThanhToan != "Tiền mặt" || d.TrangThaiThanhToan == "Đã thanh toán"))
+                                            {
+                                                var isReceive = ct.MaChiNhanh == d.MaChiNhanh;
+                                                var kiemTraXong = ct.CanNhapHang;
+                                                @if (!kiemTraXong)
+                                                {
+                                                    <div style="margin-top:0.4rem;">
+                                                        <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
+                                                            <form method="post" asp-page-handler="Accept" style="flex:1 1 0; min-width:120px;" onsubmit="return confirm('@(isReceive ? "Tiếp nhận xe này?" : "Đồng ý vận chuyển xe này?")');">
+                                                                <input type="hidden" name="maChiTiet" value="@ct.MaChiTiet" />
+                                                                <button type="submit" class="btn btn-success btn-sm w-100"><i class="fas fa-check"></i> @(isReceive ? "Tiếp nhận" : "Đồng ý vận chuyển")</button>
+                                                            </form>
+                                                            <button type="button" class="btn btn-danger btn-sm" style="flex:1 1 0; min-width:120px; white-space:nowrap;" onclick="openRejectModal(@ct.MaChiTiet, '@(ctTen.Replace("'", "\\'"))', @(isReceive ? "'Không tiếp nhận'" : "'Từ chối vận chuyển'"))">
+                                                                <i class="fas fa-times"></i> @(isReceive ? "Không tiếp nhận" : "Từ chối vận chuyển")
+                                                            </button>
+                                                        </div>
+                                                        <div class="ql-danger" style="font-size:0.72rem;margin-top:0.3rem;">Bấm Tiếp nhận để hệ thống kiểm tra tồn kho của showroom.</div>
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    @if (ct.SoLuongThieu > 0)
+                                                    {
+                                                        <div class="ql-danger" style="font-size:0.8rem;margin-top:0.3rem;">
+                                                            <i class="fas fa-exclamation-triangle"></i> Showroom không đủ xe. Chỉ còn <strong>@(ct.SoLuong - ct.SoLuongThieu)</strong>/@ct.SoLuong xe. Hãy dùng nút Xử lý thiếu xe ở cột Thao tác.
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="ql-muted" style="font-size:0.8rem;margin-top:0.3rem;">
+                                                            <i class="fas fa-check-circle text-success"></i> Đã đủ xe sau nhập/điều chuyển, hãy Tiếp nhận.
+                                                        </div>
+                                                    }
+                                                }
+                                            }
+                                        </div>
+                                    }
+                                    @{
+                                        var ycDenCuaDon = Model.DanhSachYeuCauDen.Where(y => y.MaDonCoc == d.MaDonCoc).ToList();
+                                    }
+                                    @if (ycDenCuaDon.Any())
+                                    {
+                                        foreach (var yc in ycDenCuaDon)
+                                        {
+                                            var ycTen = $"{yc.ChiTiet?.PhienBan?.DongXe?.TenDong ?? ""} {yc.ChiTiet?.PhienBan?.TenPhienBan ?? ""}".Trim();
+                                            <div class="ql-bordered" style="padding:0.5rem;margin-bottom:0.4rem;border-left:4px solid #fbbf24;">
+                                                <div><i class="fas fa-truck-moving text-warning"></i> Yêu cầu điều chuyển <small class="text-muted">· @ycTen · x@(yc.SoLuong)</small></div>
+                                                <div class="ql-muted" style="font-size:0.7rem;">Gửi từ showroom: <strong class="ql-strong">@(yc.ChiNhanhDich?.TenChiNhanh ?? yc.MaChiNhanhDich)</strong> yêu cầu nhận từ <strong class="ql-strong">@(yc.ChiNhanhNguon?.TenChiNhanh ?? yc.MaChiNhanhNguon)</strong></div>
+                                                <div class="ql-muted" style="font-size:0.7rem;">Đơn cọc: <strong class="ql-strong">#@yc.MaDonCoc</strong> · Gửi lúc @yc.NgayGui.ToString("dd/MM/yyyy HH:mm")</div>
+                                                <div class="d-flex flex-wrap gap-2 mt-1" id="yc-@yc.MaYeuCau">
+                                                    <form method="post" asp-page-handler="XacNhanDieuChuyen" onsubmit="return confirm('Xác nhận điều chuyển @yc.SoLuong xe này? Xe sẽ được trừ khỏi showroom của bạn và chuyển sang showroom đích.');">
+                                                        <input type="hidden" name="maYeuCau" value="@yc.MaYeuCau" />
+                                                        <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-check"></i> Xác nhận điều chuyển</button>
+                                                    </form>
+                                                    <button type="button" class="btn btn-danger btn-sm" onclick="openTuChoiDieuChuyen(@yc.MaYeuCau, '@(ycTen.Replace("'", "\\'"))', '@(yc.ChiNhanhDich?.TenChiNhanh ?? yc.MaChiNhanhDich)')">
+                                                        <i class="fas fa-times"></i> Từ chối
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+                                    @{
+                                        var ycDiCuaDon = Model.DanhSachYeuCauDi.Where(y => y.MaDonCoc == d.MaDonCoc).ToList();
+                                    }
+                                    @if (ycDiCuaDon.Any())
+                                    {
+                                        foreach (var yc in ycDiCuaDon)
+                                        {
+                                            var ycTen = $"{yc.ChiTiet?.PhienBan?.DongXe?.TenDong ?? ""} {yc.ChiTiet?.PhienBan?.TenPhienBan ?? ""}".Trim();
+                                            var ycState = yc.TrangThai switch
+                                            {
+                                                "Đã xác nhận" => "<span class='badge badge-confirmed'>Đã xác nhận</span>",
+                                                "Đã từ chối" => "<span class='badge badge-rejected'>Đã từ chối</span>" + (string.IsNullOrEmpty(yc.LyDoTuChoi) ? "" : "<br><small class='text-muted'>" + (yc.LyDoTuChoi ?? "").Replace("\r\n", " ") + "</small>"),
+                                                "Đã hủy" => "<span class='badge badge-cancelled'>Đã huỷ</span>",
+                                                "Đã huỷ" => "<span class='badge badge-cancelled'>Đã huỷ</span>",
+                                                _ => "<span class='badge badge-waiting'>Chờ showroom nguồn xác nhận</span>"
+                                            };
+                                            <div class="ql-bordered" style="padding:0.5rem;margin-bottom:0.4rem;border-left:4px solid #93c5fd;">
+                                                <div><i class="fas fa-paper-plane text-info"></i> Yêu cầu điều chuyển <small class="text-muted">· @ycTen</small></div>
+                                                <div class="ql-muted" style="font-size:0.7rem;">Showroom nguồn: <strong class="ql-strong">@(yc.ChiNhanhNguon?.TenChiNhanh ?? yc.MaChiNhanhNguon)</strong> → <strong class="ql-strong">@(yc.ChiNhanhDich?.TenChiNhanh ?? yc.MaChiNhanhDich)</strong></div>
+                                                <div class="ql-muted" style="font-size:0.7rem;">Số lượng: <strong class="ql-strong">@yc.SoLuong xe</strong> · Gửi lúc @yc.NgayGui.ToString("dd/MM/yyyy HH:mm")</div>
+                                                <div class="d-flex align-items-center gap-2 flex-wrap mt-1">
+                                                    @Html.Raw(ycState)
+                                                    @if (yc.TrangThai == "Chờ xác nhận")
+                                                    {
+                                                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="openHuyYeuCau(@yc.MaYeuCau, '@(ycTen.Replace("'", "\\'"))', @yc.SoLuong)">
+                                                            <i class="fas fa-times"></i> Huỷ yêu cầu
+                                                        </button>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+                                </td>
+                                <td>@d.SoTienCoc.ToString("N0")đ</td>
+                                <td>@d.NgayTaoDon.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    @switch (d.TrangThaiDonHang)
+                                    {
+                                        case "Chờ xác nhận":
+                                            <span class="badge badge-waiting">Chờ xác nhận</span>
+                                            break;
+                                        case "Đã xác nhận":
+                                            <span class="badge badge-confirmed">Đã xác nhận</span>
+                                            break;
+                                        case "Hoàn tất":
+                                            <span class="badge badge-completed">Hoàn tất</span>
+                                            break;
+                                        case "Đã từ chối":
+                                            <span class="badge badge-rejected">Đã từ chối</span>
+                                            break;
+                                        case "Đã hủy":
+                                            <span class="badge badge-cancelled">Đã hủy</span>
+                                            break;
+                                        default:
+                                            <span class="badge bg-secondary">@d.TrangThaiDonHang</span>
+                                            break;
+                                    }
+                                    <div class="ql-muted" style="font-size:0.7rem;margin-top:0.3rem;line-height:1.3;">
+                                        @(string.Equals(d.PhuongThucThanhToan, "Tiền mặt", StringComparison.OrdinalIgnoreCase) ? "Đơn tiền cọc" : "Đơn chuyển khoản")
+                                        @if (!string.IsNullOrWhiteSpace(d.TrangThaiThanhToan)) { <span class="text-muted">· @d.TrangThaiThanhToan</span> }
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(d.ToaDoGap))
+                                    {
+                                        <div data-map-latlng="@d.ToaDoGap" style="width:100%;height:120px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:#10141f;"></div>
+                                        <div class="ql-muted" style="font-size:0.72rem;margin-top:0.25rem;max-width:220px;">@(d.DiaDiemGap ?? "")</div>
+                                        <button type="button" class="btn btn-outline-primary btn-sm mt-1" onclick="openQlMap('@d.ToaDoGap', '@((d.DiaDiemGap ?? "").Replace("'", "\\'"))', '#@d.MaDonCoc')">
+                                            <i class="fas fa-map-marked-alt"></i> Xem bản đồ lớn
+                                        </button>
+                                        <a class="btn btn-outline-success btn-sm mt-1" target="_blank" rel="noopener" href="https://www.google.com/maps?q=@d.ToaDoGap">
+                                            <i class="fas fa-location-arrow"></i> Mở Google Maps: @d.ToaDoGap
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="ql-muted" style="font-size:0.75rem;">—</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (d.MaChiNhanh == Model.Showroom?.MaChiNhanh && string.Equals(d.PhuongThucThanhToan, "Tiền mặt", StringComparison.OrdinalIgnoreCase) && d.TrangThaiThanhToan != "Đã thanh toán" && d.TrangThaiDonHang != "Hoàn tất" && d.TrangThaiDonHang != "Đã hủy" && d.TrangThaiDonHang != "Đã từ chối")
+                                    {
+                                        <form method="post" asp-page-handler="ConfirmCashReceived" class="mb-1" onsubmit="return confirm('Xác nhận đã nhận TIỀN CỌC (tiền mặt) của đơn này?');">
+                                            <input type="hidden" name="maDonCoc" value="@d.MaDonCoc" />
+                                            <button type="submit" class="btn btn-success btn-sm">
+                                                <i class="fas fa-money-bill-wave"></i> Xác nhận đã nhận tiền cọc
+                                            </button>
+                                        </form>
+                                    }
+                                    @if (d.MaChiNhanh == Model.Showroom?.MaChiNhanh && d.TrangThaiDonHang == "Chờ thanh toán")
+                                    {
+                                        <button type="button" class="btn btn-outline-danger btn-sm mb-1" onclick="openCancelDeposit(@d.MaDonCoc, '@((d.HoTen ?? "").Replace("'", "\\'"))')">
+                                            <i class="fas fa-times-circle"></i> Huỷ đặt cọc
+                                        </button>
+                                    }
+                                    @if (d.MaChiNhanh == Model.Showroom?.MaChiNhanh && d.TrangThaiDonHang == "Chờ xác nhận" && (d.PhuongThucThanhToan != "Tiền mặt" || d.TrangThaiThanhToan == "Đã thanh toán") && d.ChiTiets.Any() && d.ChiTiets.All(c => c.TrangThaiTiepNhan == "Đã tiếp nhận"))
+                                    {
+                                        <form method="post" asp-page-handler="AcceptOrder" onsubmit="return confirmAccept(event);">
+                                            <input type="hidden" name="maDonCoc" value="@d.MaDonCoc" />
+                                            <div class="input-group input-group-sm mb-1" style="max-width:220px;">
+                                                <span class="input-group-text"><i class="fas fa-clock"></i></span>
+                                                <input type="datetime-local" name="ngayHenNhanXe" class="form-control" required />
+                                            </div>
+                                            <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-check"></i> Tiếp nhận đơn cọc</button>
+                                        </form>
+                                    }
+                                    @if (d.MaChiNhanh == Model.Showroom?.MaChiNhanh && (d.TrangThaiDonHang == "Chờ xác nhận" || d.TrangThaiDonHang == "Chờ xử lý"))
+                                    {
+                                        <button type="button" class="btn btn-outline-danger btn-sm mt-1" onclick="openDeclineOrder(@d.MaDonCoc, '@((d.HoTen ?? "").Replace("'", "\\'"))', @((d.TrangThaiDonHang == "Chờ xử lý") ? "true" : "false"))">
+                                            <i class="fas fa-ban"></i> Từ chối đơn cọc
+                                        </button>
+                                    }
+                                    @if (d.MaChiNhanh == Model.Showroom?.MaChiNhanh
+                                        && (d.PhuongThucThanhToan != "Tiền mặt" || d.TrangThaiThanhToan == "Đã thanh toán")
+                                        && Model.ThieuXeTheoDon.ContainsKey(d.MaDonCoc))
+                                    {
+                                        <div class="ql-bordered ql-nhap-options" style="margin-top:0.4rem;padding:0.5rem;">
+                                            <div class="ql-strong" style="font-size:0.8rem;margin-bottom:0.3rem;"><i class="fas fa-box-open"></i> Xử lý thiếu xe</div>
+                                            <div class="ql-muted" style="font-size:0.7rem;margin-bottom:0.4rem;">
+                                                @Model.ThieuXeTheoDon[d.MaDonCoc].Count loại xe đang thiếu.
+                                            </div>
+                                            @foreach (var it in Model.ThieuXeTheoDon[d.MaDonCoc])
+                                            {
+                                                @foreach (var g in it.DaGui)
+                                                {
+                                                    <div class="ql-bordered" style="font-size:0.72rem;padding:0.3rem 0.5rem;margin-bottom:0.3rem;border-left:4px solid #93c5fd;">
+                                                        <i class="fas fa-paper-plane text-info"></i> <strong>@it.TenXe</strong>: đã gửi yêu cầu <strong>@g.SoLuong</strong> xe tới <strong>@g.TenChiNhanh</strong> <span class="badge badge-waiting">Chờ xác nhận</span>
+                                                    </div>
+                                                }
+                                            }
+                                            <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
+                                                <button type="button" class="btn btn-warning btn-sm" style="flex:1 1 0; min-width:120px; white-space:nowrap;" onclick="openNhapHangOrder(@d.MaDonCoc)">
+                                                    <i class="fas fa-box"></i> Nhập hàng
+                                                </button>
+                                                <button type="button" class="btn btn-info btn-sm" style="flex:1 1 0; min-width:170px; white-space:nowrap;" onclick="openDieuChuyenOrder(@d.MaDonCoc)">
+                                                    <i class="fas fa-truck-moving"></i> Nhập từ showroom khác
+                                                </button>
+                                            </div>
+                                            <div class="ql-muted" style="font-size:0.68rem;margin-top:0.35rem;">Nhập hàng = nhập xe mới về showroom của bạn. Nhập từ showroom khác = tạo yêu cầu điều chuyển (chờ họ xác nhận).</div>
+                                        </div>
+                                    }
+                                    @if (d.MaChiNhanh == Model.Showroom?.MaChiNhanh && d.TrangThaiDonHang == "Đã xác nhận")
+                                    {
+                                        <form method="post" asp-page-handler="Sold" onsubmit="return confirm('Xác nhận bán xe và tạo hoá đơn?');">
+                                            <input type="hidden" name="maDonCoc" value="@d.MaDonCoc" />
+                                            <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-receipt"></i> Bán thành công</button>
+                                        </form>
+                                    }
+                                    @if (d.MaChiNhanh == Model.Showroom?.MaChiNhanh && (d.TrangThaiDonHang == "Đã xác nhận" || d.TrangThaiDonHang == "Hoàn tất"))
+                                    {
+                                        <form method="post" asp-page-handler="CancelSale" class="mt-1" onsubmit="return confirm('Xác nhận KHÔNG BÁN / hủy giao dịch này? Tiền cọc sẽ được hoàn lại.');">
+                                            <input type="hidden" name="maDonCoc" value="@d.MaDonCoc" />
+                                            <button type="submit" class="btn btn-outline-danger btn-sm"><i class="fas fa-ban"></i> Không bán</button>
+                                        </form>
+                                    }
+                                    @if (d.TrangThaiDonHang == "Hoàn tất")
+                                    {
+                                        var hd = Model.HoaDonList.FirstOrDefault(h => h.MaDonCoc == d.MaDonCoc);
+                                        if (hd != null)
+                                        {
+                                            <div class="ql-bordered" style="padding:0.5rem;min-width:220px;">
+                                                <div class="ql-strong" style="font-size:0.85rem;"><i class="fas fa-file-invoice-dollar"></i> @hd.MaHoaDon</div>
+                                                <div class="ql-muted" style="font-size:0.75rem;">Cơ sở: <strong class="ql-strong">@(Model.Showroom?.TenChiNhanh)</strong></div>
+                                                <div class="ql-muted" style="font-size:0.75rem;">Khách: <strong class="ql-strong">@d.HoTen</strong> (@d.SoDienThoai)</div>
+                                                <div class="ql-muted" style="font-size:0.75rem;">Tổng: <strong class="ql-strong">@hd.TongTienPhaiTra.ToString("N0")đ</strong> · Cọc: @hd.SoTienDaThanhToan.ToString("N0")đ · Còn: <strong class="ql-strong">@((hd.TongTienPhaiTra - hd.SoTienDaThanhToan).ToString("N0"))đ</strong></div>
+                                            </div>
+                                        }
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Modal hiển thị vị trí thu cọc (trong trang, không mở tab mới) -->
+<div class="modal fade ql-modal" id="qlMapModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="qlMapTitle">Vị trí thu cọc</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="qlMap" style="width:100%;height:420px;border-radius:10px;"></div>
+                <div id="qlMapInfo" class="mt-2 ql-modal" style="font-size:0.85rem;color:rgba(255,255,255,0.75);"></div>
+            </div>
+            <div class="modal-footer">
+                <a id="qlGoogleLink" class="btn btn-outline-success" target="_blank" rel="noopener" href="#"><i class="fab fa-google"></i> Mở Google Maps (dẫn đường)</a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal từ chối tiếp nhận xe -->
+<div class="modal fade ql-modal" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" asp-page-handler="Reject">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="rejectTitle">Từ chối tiếp nhận xe</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="maChiTiet" id="rejectMaChiTiet" />
+                    <div class="mb-3">
+                        <label class="form-label">Xe</label>
+                        <input type="text" class="form-control" id="rejectTenXe" readonly />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Lý do từ chối <span style="color:red;">*</span></label>
+                        <textarea name="lyDoTuChoi" id="rejectLyDo" class="form-control" rows="3" required placeholder="Bắt buộc nhập lý do từ chối"></textarea>
+                        <small class="text-muted">Lý do sẽ được gửi tới Admin và khách hàng.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-danger"><i class="fas fa-times"></i> Xác nhận từ chối</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal huỷ đặt cọc (kèm lý do) -->
+<div class="modal fade ql-modal" id="cancelDepositModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" asp-page-handler="CancelDepositOrder">
+                <div class="modal-header">
+                    <h5 class="modal-title">Huỷ đặt cọc</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="maDonCoc" id="cdMaDonCoc" />
+                    <div class="mb-3">
+                        <label class="form-label">Khách hàng</label>
+                        <input type="text" class="form-control" id="cdHoTen" readonly />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Lý do huỷ <span style="color:red;">*</span></label>
+                        <textarea name="lyDoHuY" id="cdLyDo" class="form-control" rows="3" required placeholder="VD: hết hàng, khách đổi ý, không liên hệ được..."></textarea>
+                        <small class="text-muted">Lý do sẽ được gửi cho khách hàng kèm thông báo đã nhận lý do này. Đơn huỷ sẽ KHÔNG tính vào số xe đã đặt cọc.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-danger"><i class="fas fa-times-circle"></i> Xác nhận huỷ đặt cọc</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal nhập hàng bổ sung cho xe thiếu -->
+<div class="modal fade ql-modal" id="nhapHangModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <form method="post" asp-page-handler="NhapHang" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-box"></i> Nhập hàng bổ sung cho đơn <span id="nhapHangDon"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="ql-muted mb-2" style="font-size:0.8rem;">Nhập số lượng xe cần bổ sung cho từng loại xe còn thiếu (mặc định là số còn thiếu).</div>
+                <div id="nhapHangRows"></div>
+                <small class="text-muted">Sau khi nhập đủ số lượng thiếu, xe sẽ tự động được tiếp nhận.</small>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-box"></i> Xác nhận nhập hàng</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal điều chuyển xe từ showroom khác -->
+<div class="modal fade ql-modal" id="dieuChuyenModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <form method="post" asp-page-handler="GuiYeuCauDieuChuyen" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-truck-moving"></i> Nhập hàng từ showroom khác — đơn <span id="dcDon"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="ql-muted mb-2" style="font-size:0.8rem;">
+                    Danh sách yêu cầu đã gửi cho đơn này (nếu có). Dưới là phần tạo yêu cầu mới.
+                </div>
+                <div id="dcListNguon" class="ql-muted mb-3" style="font-size:0.75rem;"></div>
+                <hr />
+                <div class="ql-strong mb-1">Tạo yêu cầu điều chuyển mới</div>
+                <div class="ql-muted mb-2" style="font-size:0.8rem;">
+                    Với mỗi loại xe còn thiếu: chọn showroom nguồn, nhập số lượng cần điều chuyển (tối đa bằng tồn kho của showroom đó). Yêu cầu sẽ được gửi tới quản lý showroom nguồn và chờ họ xác nhận.
+                </div>
+                <div id="dcRows"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Gửi yêu cầu điều chuyển</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal từ chối toàn bộ đơn cọc -->
+<div class="modal fade ql-modal" id="declineOrderModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form method="post" asp-page-handler="DeclineOrder" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-ban"></i> Từ chối đơn cọc</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="maDonCoc" id="declineMaDonCoc" />
+                <div class="mb-3" id="declineOrderInfo"></div>
+                <div class="mb-3">
+                    <label class="form-label">Lý do từ chối <span style="color:red;">*</span></label>
+                    <textarea name="lyDoTuChoi" id="declineLyDo" class="form-control" rows="3" required placeholder="Bắt buộc nhập lý do từ chối đơn cọc"></textarea>
+                    <small class="text-muted">Toàn bộ xe chưa phản hồi của đơn sẽ bị từ chối. Lý do được gửi tới Admin và khách hàng.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="submit" class="btn btn-danger"><i class="fas fa-ban"></i> Xác nhận từ chối đơn cọc</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal huỷ yêu cầu điều chuyển đã gửi đi -->
+<div class="modal fade ql-modal" id="huyYeuCauModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="post" asp-page-handler="HuyYeuCau" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-times-circle text-warning"></i> Huỷ yêu cầu điều chuyển</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="maYeuCau" id="hyMaYeuCau" />
+                <div class="mb-2" id="hyInfo"></div>
+                <div class="ql-muted" style="font-size:0.8rem;">Bạn có chắc muốn huỷ yêu cầu điều chuyển này không? Đơn cọc vẫn được giữ nguyên, bạn chỉ cần xử lý thiếu xe theo cách khác.</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Không huỷ</button>
+                <button type="submit" class="btn btn-danger"><i class="fas fa-ban"></i> Xác nhận huỷ yêu cầu</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal từ chối yêu cầu điều chuyển -->
+<div class="modal fade ql-modal" id="tuChoiDieuChuyenModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form method="post" asp-page-handler="TuChoiDieuChuyen" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-ban"></i> Từ chối yêu cầu điều chuyển</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="maYeuCau" id="tcdMaYeuCau" />
+                <div class="mb-3" id="tcdInfo"></div>
+                <div class="mb-3">
+                    <label class="form-label">Lý do từ chối <span style="color:red;">*</span></label>
+                    <textarea name="lyDoTuChoi" id="tcdLyDo" class="form-control" rows="3" required placeholder="Bắt buộc nhập lý do từ chối điều chuyển"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="submit" class="btn btn-danger"><i class="fas fa-ban"></i> Xác nhận từ chối</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    window.showroomsRaw = @Html.Raw(
+        System.Text.Json.JsonSerializer.Serialize(
+            Model.ShowroomNguonTheoChiTiet
+                .Select(kv => new
+                {
+                    chiTiet = kv.Key,
+                    list = kv.Value.Select(o => new { o.MaChiNhanh, o.TenChiNhanh, o.CoSan, o.CoTheDieuChuyen })
+                }),
+            new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }
+        )
+    );
+
+    window.thieuXeByDon = @Html.Raw(
+        System.Text.Json.JsonSerializer.Serialize(
+            Model.ThieuXeTheoDon
+                .ToDictionary(kv => kv.Key.ToString(),
+                    kv => kv.Value.Select(i => new { i.MaChiTiet, i.TenXe, i.SoLuongThieu, Showrooms = i.Showrooms.Select(s => new { s.MaChiNhanh, s.TenChiNhanh, s.CoSan, s.CoTheDieuChuyen }), DaGui = i.DaGui.Select(g => new { g.MaChiNhanh, g.TenChiNhanh, g.SoLuong }) })),
+            new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }
+        )
+    );
+
+    function openRejectModal(maChiTiet, tenXe, actionLabel) {
+        document.getElementById('rejectMaChiTiet').value = maChiTiet;
+        document.getElementById('rejectTenXe').value = tenXe;
+        document.getElementById('rejectLyDo').value = '';
+        document.getElementById('rejectTitle').textContent = actionLabel || 'Từ chối tiếp nhận xe';
+        new bootstrap.Modal(document.getElementById('rejectModal')).show();
+    }
+
+    function escHtml(s) {
+        return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    // Modal Nhập hàng: liệt kê mọi loại xe còn thiếu của 1 đơn, mỗi loại chỉ nhập số lượng (mặc định = số còn thiếu)
+    function openNhapHangOrder(maDonCoc) {
+        var don = String(maDonCoc);
+        var items = (window.thieuXeByDon || {})[don] || [];
+        if (!items.length) return;
+        document.getElementById('nhapHangDon').textContent = '#' + don;
+        var rowsEl = document.getElementById('nhapHangRows');
+        rowsEl.innerHTML = '';
+        items.forEach(function (it) {
+            var row = document.createElement('div');
+            row.className = 'ql-bordered mb-2 p-2 d-flex justify-content-between align-items-center gap-2 flex-wrap';
+            row.innerHTML =
+                '<div style="flex:1 1 0;min-width:180px;">' +
+                    '<div class="ql-strong" style="font-size:0.85rem;">' + escHtml(it.tenXe) + '</div>' +
+                    '<div class="ql-muted" style="font-size:0.72rem;">Còn thiếu: <strong>' + it.soLuongThieu + '</strong> xe</div>' +
+                '</div>' +
+                '<div style="min-width:120px;">' +
+                    '<label class="form-label mb-1" style="font-size:0.7rem;">Số lượng nhập</label>' +
+                    '<input type="number" name="maChiTiet" value="' + it.maChiTiet + '" hidden />' +
+                    '<input type="number" name="soLuongNhap" class="form-control form-control-sm" min="1" value="' + it.soLuongThieu + '" required />' +
+                '</div>';
+            rowsEl.appendChild(row);
+        });
+        new bootstrap.Modal(document.getElementById('nhapHangModal')).show();
+    }
+
+    // Modal Nhập hàng từ showroom khác: mỗi loại xe thiếu chọn showroom nguồn + số lượng + hiện tồn kho khả dụng
+    function openDieuChuyenOrder(maDonCoc) {
+        var don = String(maDonCoc);
+        var items = (window.thieuXeByDon || {})[don] || [];
+        if (!items.length) return;
+        document.getElementById('dcDon').textContent = '#' + don;
+        var rowsEl = document.getElementById('dcRows');
+        rowsEl.innerHTML = '';
+        items.forEach(function (it, idx) {
+            var opts = it.showrooms || [];
+            var row = document.createElement('div');
+            row.className = 'ql-bordered mb-2 p-2';
+            var selHtml = '<option value="">-- Chọn showroom nguồn --</option>';
+            var daGiu = it.soLuongThieu > 0 ? it.soLuongThieu : 1;
+            var daGuiInfo = '';
+            var daGuiByShow = {};
+            (it.daGui || []).forEach(function (g) {
+                daGuiByShow[g.maChiNhanh] = g.soLuong;
+                daGuiInfo += '<div class="ql-warning" style="font-size:0.72rem;margin-top:0.2rem;"><i class="fas fa-clock"></i> Đã gửi yêu cầu <strong>' + g.soLuong + '</strong> xe tới <strong>' + escHtml(g.tenChiNhanh) + '</strong> (chờ xác nhận)</div>';
+            });
+            opts.forEach(function (o) {
+                var daOops = daGuiByShow[o.maChiNhanh] || 0;
+                var conLai = Math.max(0, o.coSan - daOops);
+                selHtml += '<option value="' + o.maChiNhanh + '" data-conlai="' + conLai + '">' + escHtml(o.tenChiNhanh) + ' (có ' + conLai + ' xe có thể xin)</option>';
+            });
+            row.innerHTML =
+                '<input type="number" name="maChiTiet" value="' + it.maChiTiet + '" hidden />' +
+                '<div class="ql-strong" style="font-size:0.85rem;">' + escHtml(it.tenXe) + ' <span class="text-danger">(còn thiếu ' + it.soLuongThieu + ' xe)</span></div>' +
+                daGuiInfo +
+                '<div class="row g-2 align-items-center mt-1">' +
+                    '<div class="col-md-6">' +
+                        '<label class="form-label mb-1" style="font-size:0.7rem;">Showroom nguồn</label>' +
+                        '<select name="maChiNhanhNguon" class="form-select form-select-sm" onchange="dcRowInfo(this)" required>' + selHtml + '</select>' +
+                    '</div>' +
+                    '<div class="col-md-3">' +
+                        '<label class="form-label mb-1" style="font-size:0.7rem;">Số lượng</label>' +
+                        '<input type="number" name="soLuongDieuChuyen" class="form-control form-control-sm dc-qty" min="1" value="' + daGiu + '" required />' +
+                    '</div>' +
+                '</div>' +
+                '<div class="ql-muted dc-row-info mt-1" style="font-size:0.72rem;"></div>';
+            rowsEl.appendChild(row);
+        });
+        var listEl = document.getElementById('dcListNguon');
+        listEl.innerHTML = '';
+        var coDaGui = false;
+        items.forEach(function (it) {
+            (it.daGui || []).forEach(function (g) {
+                coDaGui = true;
+                var li = document.createElement('div');
+                li.className = 'ql-bordered mb-1 p-2';
+                li.style.borderLeft = '4px solid #93c5fd';
+                li.innerHTML =
+                    '<div class="d-flex justify-content-between align-items-center flex-wrap gap-2">' +
+                        '<div><i class="fas fa-paper-plane text-info"></i> <strong>' + escHtml(it.tenXe) + '</strong></div>' +
+                        '<div><strong>' + g.soLuong + '</strong> xe tới <strong>' + escHtml(g.tenChiNhanh) + '</strong> <span class="badge badge-waiting">Chờ xác nhận</span></div>' +
+                    '</div>';
+                listEl.appendChild(li);
+            });
+        });
+        if (coDaGui) {
+            listEl.innerHTML = '<div class="ql-strong mb-1 ql-muted" style="font-size:0.8rem;"><i class="fas fa-list"></i> Yêu cầu đã gửi cho đơn này</div>' + listEl.innerHTML;
+        }
+        new bootstrap.Modal(document.getElementById('dieuChuyenModal')).show();
+    }
+
+    function dcRowInfo(select) {
+        var box = select.closest('.ql-bordered');
+        var info = box.querySelector('.dc-row-info');
+        var qty = box.querySelector('.dc-qty');
+        var o = select.options[select.selectedIndex];
+        if (o && o.value) {
+            var conLai = parseInt(o.dataset.conlai || '0', 10);
+            if (qty) { qty.max = Math.max(1, conLai); if (parseInt(qty.value, 10) > conLai) qty.value = conLai; }
+            info.innerHTML = '<i class="fas fa-info-circle"></i> Showroom nguồn hiện có thể xin <strong>' + conLai + '</strong> xe (đã trừ yêu cầu đang chờ). Quản lý showroom đó sẽ xác nhận.';
+        } else {
+            if (qty) qty.removeAttribute('max');
+            info.innerHTML = '';
+        }
+    }
+
+    function openTuChoiDieuChuyen(maYeuCau, tenXe, tenShowroomDich) {
+        document.getElementById('tcdMaYeuCau').value = maYeuCau;
+        document.getElementById('tcdInfo').innerHTML = '<strong>Yêu cầu #' + maYeuCau + '</strong> - ' + tenXe + ' cho showroom: ' + tenShowroomDich;
+        document.getElementById('tcdLyDo').value = '';
+        new bootstrap.Modal(document.getElementById('tuChoiDieuChuyenModal')).show();
+    }
+
+    function openHuyYeuCau(maYeuCau, tenXe, soLuong) {
+        document.getElementById('hyMaYeuCau').value = maYeuCau;
+        document.getElementById('hyInfo').innerHTML = '<strong>Yêu cầu #' + maYeuCau + '</strong> - ' + escHtml(tenXe) + ' (x' + soLuong + ' xe)';
+        new bootstrap.Modal(document.getElementById('huyYeuCauModal')).show();
+    }
+
+    var declineOrderIsXuly = false;
+    function openDeclineOrder(maDonCoc, khachHang, isXuLy) {
+        declineOrderIsXuly = isXuLy;
+        document.getElementById('declineMaDonCoc').value = maDonCoc;
+        document.getElementById('declineOrderInfo').innerHTML = '<strong>Đơn cọc #' + maDonCoc + '</strong> - Khách: ' + khachHang;
+        document.getElementById('declineLyDo').value = '';
+        new bootstrap.Modal(document.getElementById('declineOrderModal')).show();
+    }
+
+    function openCancelDeposit(maDonCoc, khachHang) {
+        document.getElementById('cdMaDonCoc').value = maDonCoc;
+        document.getElementById('cdHoTen').value = 'Đơn cọc #' + maDonCoc + ' - Khách: ' + khachHang;
+        document.getElementById('cdLyDo').value = '';
+        new bootstrap.Modal(document.getElementById('cancelDepositModal')).show();
+    }
+
+    var GIO_HANH_CHINH_BAT_DAU = 8;          // 08:00
+    var GIO_HEN_MUON_NHAT = 14;              // tối đa 14:30 (ít nhất 3 tiếng trước khi hết giờ hành chính 17:30)
+    var PHUT_HEN_MUON_NHAT = 30;
+
+    function isGioHoptLe(d) {
+        var hh = d.getHours(), mm = d.getMinutes();
+        if (hh < GIO_HANH_CHINH_BAT_DAU) return false;
+        if (hh > GIO_HEN_MUON_NHAT) return false;
+        if (hh === GIO_HEN_MUON_NHAT && mm > PHUT_HEN_MUON_NHAT) return false;
+        return true;
+    }
+
+    function confirmAccept(event) {
+        var form = event.target.closest('form');
+        var ngay = form ? form.querySelector('[name="ngayHenNhanXe"]') : null;
+        if (ngay) {
+            if (!ngay.value) {
+                alert('Vui lòng chọn ngày/giờ hẹn gặp trước khi tiếp nhận đơn cọc.');
+                event.preventDefault();
+                return false;
+            }
+            var d = new Date(ngay.value);
+            if (isNaN(d.getTime()) || d.getTime() < Date.now()) {
+                alert('Không thể chọn thời điểm trong quá khứ. Vui lòng chọn giờ hẹn trong tương lai.');
+                event.preventDefault();
+                return false;
+            }
+            if (!isGioHoptLe(d)) {
+                alert('Giờ hẹn phải nằm trong giờ hành chính (08:00) và phải ít nhất 3 tiếng trước khi hết giờ hành chính (tối đa 14:30). Vui lòng chọn lại.');
+                event.preventDefault();
+                return false;
+            }
+        }
+        if (!confirm('Tiếp nhận toàn bộ đơn cọc này và gửi lịch hẹn cho khách?')) {
+            event.preventDefault();
+            return false;
+        }
+        return true;
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var minStr = new Date(Date.now() + 60000).toISOString().slice(0, 16);
+        document.querySelectorAll('[name="ngayHenNhanXe"]').forEach(function (el) {
+            el.min = minStr;
+        });
+    });
+</script>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof L === 'undefined') return;
+        document.querySelectorAll('[data-map-latlng]').forEach(function (el) {
+            var raw = el.getAttribute('data-map-latlng');
+            var parts = raw ? raw.split(',') : [];
+            var lat = parseFloat(parts[0]), lng = parseFloat(parts[1]);
+            if (isNaN(lat) || isNaN(lng)) { el.style.display = 'none'; return; }
+            var m = L.map(el, { zoomControl: false, attributionControl: false, scrollWheelZoom: false }).setView([lat, lng], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(m);
+            L.marker([lat, lng]).addTo(m);
+        });
+    });
+
+    var qlBigMap = null;
+    var qlBigMarker = null;
+    function openQlMap(latlng, diaDiem, maDon) {
+        if (typeof L === 'undefined' || typeof bootstrap === 'undefined') return;
+        var parts = latlng ? latlng.split(',') : [];
+        var lat = parseFloat(parts[0]), lng = parseFloat(parts[1]);
+        if (isNaN(lat) || isNaN(lng)) return;
+        if (!qlBigMap) {
+            qlBigMap = L.map('qlMap', { zoomControl: true, attributionControl: false }).setView([lat, lng], 16);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '' }).addTo(qlBigMap);
+            qlBigMarker = L.marker([lat, lng]).addTo(qlBigMap);
+        } else {
+            qlBigMap.setView([lat, lng], 16);
+            qlBigMarker.setLatLng([lat, lng]);
+        }
+        document.getElementById('qlMapTitle').textContent = 'Vị trí thu cọc' + (maDon || '');
+        document.getElementById('qlMapInfo').textContent = diaDiem || '';
+        var gl = document.getElementById('qlGoogleLink');
+        if (gl) gl.href = 'https://www.google.com/maps?q=' + latlng;
+        var modal = new bootstrap.Modal(document.getElementById('qlMapModal'));
+        modal.show();
+        setTimeout(function () { if (qlBigMap) qlBigMap.invalidateSize(); }, 250);
+    }
+</script>

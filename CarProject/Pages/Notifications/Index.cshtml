@@ -1,0 +1,58 @@
+@page
+@model CarProject.Pages.Notifications.IndexModel
+@{
+    ViewData["Title"] = "Thông báo";
+}
+
+<div class="notif-page">
+    <div class="notif-header">
+        <h1><i class="fas fa-bell me-2"></i>Thông báo</h1>
+        @if (Model.UnreadCount > 0)
+        {
+            <form method="post" asp-page-handler="MarkAllRead" style="display:inline">
+                <button type="submit" class="btn btn-sm btn-outline-light">
+                    <i class="fas fa-check-double me-1"></i>Đã xem tất cả
+                </button>
+            </form>
+        }
+    </div>
+
+    @if (Model.Notifications.Count == 0)
+    {
+        <div class="notif-empty">
+            <i class="fas fa-bell-slash"></i>
+            <p>Không có thông báo nào.</p>
+        </div>
+    }
+    else
+    {
+        <div class="notif-list">
+            @foreach (var n in Model.Notifications)
+            {
+                <div class="notif-item @(!n.DaXem ? "notif-unread" : "")">
+                    <div class="notif-content">
+                        <div class="notif-title">@n.TieuDe</div>
+                        <div class="notif-body">@n.NoiDung</div>
+                        <div class="notif-time">@n.NgayTao.ToString("dd/MM/yyyy HH:mm")</div>
+                    </div>
+                    <div class="notif-actions">
+                        @if (!string.IsNullOrEmpty(n.DuongDan))
+                        {
+                            <a href="@n.DuongDan" class="btn btn-sm btn-outline-info">
+                                <i class="fas fa-eye"></i> Xem
+                            </a>
+                        }
+                        @if (!n.DaXem)
+                        {
+                            <form method="post" asp-page-handler="MarkRead" asp-route-id="@n.MaThongBao" style="display:inline">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

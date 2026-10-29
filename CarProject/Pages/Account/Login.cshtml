@@ -1,0 +1,81 @@
+@page
+@model CarProject.Pages.Account.LoginModel
+
+@{
+    ViewData["Title"] = "Đăng nhập";
+}
+
+<div class="auth-page">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-5 col-lg-4">
+                <div class="auth-card">
+                    <h2>Đăng nhập</h2>
+                    <p class="auth-subtitle">Đăng nhập để quản lý và đặt xe</p>
+
+                    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+                    {
+                        <div style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; padding: 0.75rem 1rem; font-size: 0.82rem; margin-bottom: 1.5rem;">
+                            @Model.ErrorMessage
+                        </div>
+                    }
+
+                    @if (Model.LoaiThongBao == "daCoTaiKhoan")
+                    {
+                        <div style="background: rgba(234,179,8,0.15); border: 1px solid rgba(234,179,8,0.3); color: #eab308; padding: 0.75rem 1rem; font-size: 0.82rem; margin-bottom: 1.5rem;">
+                            <i class="fas fa-info-circle me-1"></i> Email này đã được đăng ký. Vui lòng đăng nhập.
+                        </div>
+                    }
+
+                    @if (Model.LoaiThongBao == "dangKyThanhCong")
+                    {
+                        <div style="background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); color: #22c55e; padding: 0.75rem 1rem; font-size: 0.82rem; margin-bottom: 1.5rem;">
+                            <i class="fas fa-check-circle me-1"></i> Đăng ký thành công! Vui lòng đăng nhập.
+                        </div>
+                    }
+
+                    <form method="post">
+                        <div class="mb-3">
+                            <label asp-for="TenDangNhap" class="form-label">Tên đăng nhập / Email</label>
+                            <input asp-for="TenDangNhap" class="form-control" required placeholder="Nhập tên đăng nhập" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="MatKhau" class="form-label">Mật khẩu</label>
+                            <div class="pwd-wrapper">
+                                <input asp-for="MatKhau" type="password" class="form-control pwd-input" required placeholder="Nhập mật khẩu" />
+                                <button type="button" class="pwd-toggle" tabindex="-1"><i class="fas fa-eye"></i></button>
+                            </div>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input asp-for="RememberMe" type="checkbox" class="form-check-input" style="accent-color: var(--brand-silver);" />
+                            <label asp-for="RememberMe" class="form-check-label" style="font-size: 0.8rem;">Ghi nhớ đăng nhập</label>
+                        </div>
+
+                        <button type="submit" class="btn-submit">
+                            <i class="fas fa-sign-in-alt me-2"></i> Đăng nhập
+                        </button>
+                    </form>
+
+                    @if (Model.GoogleEnabled)
+                    {
+                        <div style="position: relative; margin: 1.5rem 0; text-align: center;">
+                            <div style="border-top: 1px solid rgba(255,255,255,0.08);"></div>
+                            <span style="position: relative; top: -10px; background: var(--brand-gray); padding: 0 0.8rem; font-size: 0.75rem; color: rgba(255,255,255,0.3);">HOẶC</span>
+                        </div>
+                        <a asp-page="Login" asp-page-handler="GoogleLogin" style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 0.7rem; border: 1px solid rgba(255,255,255,0.1); color: var(--brand-white); font-size: 0.82rem; font-weight: 500; text-decoration: none; transition: all 0.3s;">
+                            <img src="https://www.google.com/favicon.ico" alt="" style="width: 18px; height: 18px;" />
+                            Đăng nhập với Google
+                        </a>
+                    }
+
+                    <div class="auth-alt">
+                        Chưa có tài khoản?
+                        <a asp-page="/Account/Register">Đăng ký</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

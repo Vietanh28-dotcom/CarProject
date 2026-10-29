@@ -1,0 +1,152 @@
+@page
+@model CarProject.Pages.QuanLy.NhapHangModel
+@{
+    ViewData["Title"] = "Nhập hàng";
+    Layout = "_Layout";
+}
+
+<script>
+    function chonPhienBan(id) {
+        document.getElementById('dp_maPhienBan').value = id;
+        const gia = document.getElementById('g_' + id).value;
+        document.getElementById('dp_giaNhap').value = gia;
+    }
+    function tinhTong() {
+        var sl = parseInt(document.getElementById('dp_soLuong').value) || 0;
+        var gia = parseInt(document.getElementById('dp_giaNhap').value) || 0;
+        document.getElementById('dp_tong').textContent = (sl * gia).toLocaleString('vi-VN') + 'đ';
+    }
+</script>
+
+<div class="container py-4">
+    <h4 class="mb-3"><i class="fas fa-warehouse me-2"></i>Nhập hàng - <strong>@(Model.Showroom?.TenChiNhanh)</strong></h4>
+
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle me-1"></i> @Model.SuccessMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-triangle me-1"></i> @Model.ErrorMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-dark text-white py-2"><i class="bi bi-box-arrow-in-down me-1"></i> Thêm xe vào kho</div>
+                <div class="card-body">
+                    <form method="post" asp-page-handler="Nhap">
+                        <input type="hidden" id="dp_maPhienBan" name="maPhienBan" value="" />
+                        <div class="mb-2">
+                            <label class="form-label small">Phiên bản xe</label>
+                            <select class="form-select" id="dp_pb" onchange="chonPhienBan(this.value)">
+                                <option value="">--Chọn phiên bản--</option>
+                                @foreach (var p in Model.PhienBans)
+                                {
+                                    <option value="@p.MaPhienBan">@($"{p.DongXe?.TenDong} {p.TenPhienBan}")</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small">Số lượng nhập</label>
+                            <input type="number" id="dp_soLuong" name="soLuongNhap" min="1" value="1" class="form-control" oninput="setDefaultTong()" />
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small">Đơn giá nhập (VNĐ)</label>
+                            <input type="number" id="dp_giaNhap" name="giaNhapMoiXe" min="0" class="form-control" oninput="setDefaultTong()" />
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small">Ghi chú</label>
+                            <input type="text" name="ghiChu" class="form-control" />
+                        </div>
+                        <div class="mb-3 small text-muted">Tổng chi phí nhập: <strong id="dp_tong">0đ</strong></div>
+                        <button type="submit" class="btn btn-success w-100"><i class="bi bi-check-lg"></i> Nhập hàng</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-dark text-white py-2"><i class="bi bi-boxes me-1"></i> Danh sách phiên bản & tồn kho showroom của bạn</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Xe / Phiên bản</th>
+                                    <th class="text-end">Giá niêm yết</th>
+                                    <th class="text-end">Giá nhập</th>
+                                    <th class="text-end">Tồn kho của bạn</th>
+                                    <th class="text-end">Tồn tổng</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var p in Model.PhienBans)
+                                {
+                                    <tr style="cursor:pointer" onclick="chonPhienBan(@p.MaPhienBan); document.getElementById('dp_picker').value='@p.MaPhienBan';">
+                                        <td>@($"{p.DongXe?.TenDong} {p.TenPhienBan}")</td>
+                                        <td class="text-end">@p.GiaNiemYet.ToString("N0")</td>
+                                        <td class="text-end">@p.GiaNhap.ToString("N0")</td>
+                                        <td class="text-end">@Model.TonKhoShowroom.GetValueOrDefault(p.MaPhienBan, 0)</td>
+                                        <td class="text-end">@p.SoLuongTrongKho</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mt-3">
+        <div class="card-header bg-dark text-white py-2"><i class="bi bi-clock-history me-1"></i> Lịch sử nhập hàng gần đây</div>
+        <div class="card-body">
+            @if (!Model.PhieuNhaps.Any())
+            {
+                <div class="text-muted">Chưa có phiếu nhập nào cho showroom này.</div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr><th>Thời gian</th><th>Phiên bản</th><th class="text-end">SL</th><th class="text-end">Giá nhập/siếc</th><th class="text-end">Tổng nhập</th><th>Người nhập</th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var pn in Model.PhieuNhaps)
+                            {
+                                <tr>
+                                    <td>@pn.NgayNhap.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>@(pn.PhienBan == null ? "" : (pn.PhienBan.DongXe?.TenDong + " " + pn.PhienBan.TenPhienBan))</td>
+                                    <td class="text-end">@pn.SoLuongNhap</td>
+                                    <td class="text-end">@pn.SoTienNhapMoiXe.ToString("N0")</td>
+                                    <td class="text-end">@pn.TongSoTienNhap.ToString("N0")</td>
+                                    <td>@pn.NguoiNhap</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function chon(id) {
+            chonPhienBan(id);
+            var gia = document.getElementById('g_' + id).value;
+            document.getElementById('dp_giaNhap').value = gia;
+            setDefaultTong();
+        }
+    </script>
+}

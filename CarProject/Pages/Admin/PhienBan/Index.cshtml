@@ -1,0 +1,114 @@
+@page
+@model CarProject.Pages.Admin.PhienBan.IndexModel
+
+<div class="container-fluid db-wrap">
+    <div class="db-toolbar">
+        <div>
+            <h1 class="db-title">Quản lý Phiên Bản Xe</h1>
+            <div class="db-subtitle">Tổng cộng @Model.PhienBanList.Count phiên bản · Dashboard quản trị</div>
+        </div>
+        <a asp-page="Create" class="db-btn-primary">
+            <i class="fas fa-plus me-1"></i> Thêm Phiên Bản
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">@TempData["Success"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">@TempData["Error"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    }
+
+    @if (Model.PhienBanList.Count == 0)
+    {
+        <div class="alert alert-info">Không có phiên bản xe nào.</div>
+    }
+    else
+    {
+        <div class="db-card">
+            <div class="db-table-responsive">
+                <table class="db-table" style="min-width:1100px;">
+                    <colgroup>
+                        <col style="width:80px" />
+                        <col style="width:200px" />
+                        <col style="width:200px" />
+                        <col style="width:140px" />
+                        <col style="width:140px" />
+                        <col style="width:110px" />
+                        <col style="width:120px" />
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>Mã</th>
+                            <th>Tên Phiên Bản</th>
+                            <th>Dòng Xe</th>
+                            <th>Giá</th>
+                            <th>Màu</th>
+                            <th>Kho</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var pb in Model.PhienBanList)
+                        {
+                            <tr>
+                                <td><span class="db-id">#@pb.MaPhienBan</span></td>
+                                <td><div class="db-name">@pb.TenPhienBan</div></td>
+                                <td><div class="db-sub">@pb.DongXe?.TenDong</div></td>
+                                <td><span class="db-money">@pb.GiaNiemYet.ToString("N0")đ</span></td>
+                                <td><div class="db-sub">@pb.MauSac</div></td>
+                                <td>
+                                    @{ 
+                                        var stockSummary = Model.StockSummaryByPhienBan.ContainsKey(pb.MaPhienBan)
+                                            ? Model.StockSummaryByPhienBan[pb.MaPhienBan]
+                                            : null;
+                                        var totalStock = 0;
+                                        if (stockSummary != null)
+                                        {
+                                            totalStock = stockSummary.Split(',').Sum(x => int.Parse(x.Split(':').Last().Trim()));
+                                        }
+                                        else
+                                        {
+                                            totalStock = pb.SoLuongTrongKho;
+                                        }
+                                    }
+
+                                    @if (totalStock <= 0)
+                                    {
+                                        <span class="db-badge red">Hết hàng</span>
+                                    }
+                                    else if (totalStock <= 5)
+                                    {
+                                        <span class="db-badge yellow">Sắp hết</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="db-badge green">Còn hàng</span>
+                                    }
+                                    <div class="db-sub" style="margin-top:2px;">
+                                        @if (stockSummary != null)
+                                        {
+                                            <span>@stockSummary</span>
+                                        }
+                                        else
+                                        {
+                                            <span>@pb.SoLuongTrongKho xe</span>
+                                        }
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="db-actions">
+                                        <a asp-page="Edit" asp-route-id="@pb.MaPhienBan" class="db-act edit" title="Sửa"><i class="fas fa-edit"></i></a>
+                                        <a asp-page="Delete" asp-route-id="@pb.MaPhienBan" class="db-act del" title="Xóa" onclick="return confirm('Xác nhận xóa?');"><i class="fas fa-trash-alt"></i></a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

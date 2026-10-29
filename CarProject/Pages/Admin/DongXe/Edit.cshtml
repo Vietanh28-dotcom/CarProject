@@ -1,0 +1,36 @@
+@page "{id:int}"
+@model CarProject.Pages.Admin.DongXe.EditModel
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6">
+            <h2>Sửa Dòng Xe</h2>
+            @if (Model.DongXe == null)
+            {
+                <div class="alert alert-danger">Không tìm thấy dòng xe.</div>
+            }
+            else
+            {
+                <form method="post">
+                    <input type="hidden" asp-for="DongXe.MaDong" />
+                    <div class="mb-3">
+                        <label asp-for="DongXe.MaHang" class="form-label">Hãng Xe</label>
+                        <select asp-for="DongXe.MaHang" asp-items="Model.HangList" class="form-control" required></select>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="DongXe.TenDong" class="form-label">Tên Dòng</label>
+                        <input asp-for="DongXe.TenDong" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="DongXe.KieuDang" class="form-label">Kiểu Dáng</label>
+                        <input asp-for="DongXe.KieuDang" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <button type="submit" class="btn btn-primary">Cập nhật</button>
+                        <a asp-page="Index" class="btn btn-secondary">Hủy</a>
+                    </div>
+                </form>
+            }
+        </div>
+    </div>
+</div>

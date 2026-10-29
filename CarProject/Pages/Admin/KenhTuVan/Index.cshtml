@@ -1,0 +1,70 @@
+@page
+@model CarProject.Pages.Admin.KenhTuVan.IndexModel
+
+<div class="container-fluid db-wrap">
+    <div class="db-toolbar">
+        <div>
+            <h1 class="db-title">Quản lý Kênh Tư Vấn</h1>
+            <div class="db-subtitle">Tổng cộng @Model.KenhList.Count kênh · Dashboard quản trị</div>
+        </div>
+        <a asp-page="Create" class="db-btn-primary">
+            <i class="fas fa-plus me-1"></i> Thêm Kênh
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">@TempData["Success"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">@TempData["Error"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    }
+
+    @if (Model.KenhList.Count == 0)
+    {
+        <div class="alert alert-info">Không có kênh tư vấn nào.</div>
+    }
+    else
+    {
+        <div class="db-card">
+            <div class="db-table-responsive">
+                <table class="db-table" style="min-width:1050px;">
+                    <colgroup>
+                        <col style="width:90px" />
+                        <col style="width:280px" />
+                        <col style="width:280px" />
+                        <col style="width:280px" />
+                        <col style="width:120px" />
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>Mã Kênh</th>
+                            <th>URL Messenger</th>
+                            <th>URL Zalo</th>
+                            <th>URL SMS</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var k in Model.KenhList)
+                        {
+                            <tr>
+                                <td><span class="db-id">#@k.MaKenh</span></td>
+                                <td><div class="db-2line">@k.UrlMessenger</div></td>
+                                <td><div class="db-2line">@k.UrlZalo</div></td>
+                                <td><div class="db-2line">@k.UrlSMS</div></td>
+                                <td>
+                                    <div class="db-actions">
+                                        <a asp-page="Edit" asp-route-id="@k.MaKenh" class="db-act edit" title="Sửa"><i class="fas fa-edit"></i></a>
+                                        <a asp-page="Delete" asp-route-id="@k.MaKenh" class="db-act del" title="Xóa" onclick="return confirm('Xác nhận xóa?');"><i class="fas fa-trash-alt"></i></a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

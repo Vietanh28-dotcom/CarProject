@@ -1,0 +1,219 @@
+@page
+@model CarProject.Pages.Admin.ThongKe.DoanhThuModel
+@{
+    ViewData["Title"] = "Doanh thu theo ngày";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid db-wrap">
+    <div class="db-toolbar">
+        <div>
+            <h1 class="db-title">Doanh thu theo ngày</h1>
+            <div class="db-subtitle">Thống kê doanh thu đã thanh toán · Dashboard tài chính</div>
+        </div>
+        <a asp-page="/Admin/ThongKe/Index" class="db-btn-ghost">
+            <i class="fas fa-arrow-left me-1"></i> Về thống kê
+        </a>
+    </div>
+
+    @* Filter form *@
+    <form method="get" class="db-card mb-4" style="padding:1rem 1.25rem;">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label" style="font-size:0.75rem;color:rgba(255,255,255,0.5);margin-bottom:0.35rem;">Từ ngày</label>
+                <input type="date" name="TuNgay" value="@Model.TuNgay?.ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" style="font-size:0.75rem;color:rgba(255,255,255,0.5);margin-bottom:0.35rem;">Đến ngày</label>
+                <input type="date" name="DenNgay" value="@Model.DenNgay?.ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" style="font-size:0.75rem;color:rgba(255,255,255,0.5);margin-bottom:0.35rem;">Chi nhánh</label>
+                <select name="MaChiNhanh" class="form-select form-select-sm">
+                    <option value="">-- Tất cả --</option>
+                    @foreach (var cn in Model.DanhSachChiNhanh)
+                    {
+                        <option value="@cn.MaChiNhanh" selected="@(Model.MaChiNhanh == cn.MaChiNhanh)">
+                            @cn.TenChiNhanh
+                        </option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="db-btn-primary w-100" style="justify-content:center;"><i class="fas fa-filter me-1"></i>Xem</button>
+            </div>
+        </div>
+    </form>
+
+    @* Summary stats *@
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="db-card" style="padding:1.25rem;">
+                <div class="db-sub">Tổng doanh thu</div>
+                <div class="db-money" style="font-size:1.4rem;margin-top:0.4rem;">@Model.TongDoanhThu.ToString("N0")₫</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="db-card" style="padding:1.25rem;">
+                <div class="db-sub">Tổng đơn cọc</div>
+                <div class="db-money" style="font-size:1.4rem;margin-top:0.4rem;">@Model.TongDon</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="db-card" style="padding:1.25rem;">
+                <div class="db-sub">Từ ngày</div>
+                <div class="db-name" style="font-size:1.05rem;margin-top:0.4rem;">@(Model.TuNgay?.ToString("dd/MM/yyyy") ?? "—")</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="db-card" style="padding:1.25rem;">
+                <div class="db-sub">Đến ngày</div>
+                <div class="db-name" style="font-size:1.05rem;margin-top:0.4rem;">@(Model.DenNgay?.ToString("dd/MM/yyyy") ?? "—")</div>
+            </div>
+        </div>
+    </div>
+
+    @* Line chart *@
+    <div class="db-card mb-4">
+        <div class="db-toolbar" style="border-bottom:1px solid rgba(255,255,255,0.06);">
+            <div>
+                <div class="db-name"><i class="fas fa-chart-area me-2"></i>Biểu đồ doanh thu theo ngày</div>
+            </div>
+        </div>
+        <div style="padding:1.25rem;">
+            <div class="chart-container">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    @* Showroom comparison bar chart *@
+    <div class="db-card mb-4">
+        <div class="db-toolbar" style="border-bottom:1px solid rgba(255,255,255,0.06);">
+            <div>
+                <div class="db-name"><i class="fas fa-chart-bar me-2"></i>Doanh thu theo chi nhánh</div>
+            </div>
+        </div>
+        <div style="padding:1.25rem;">
+            <div class="chart-container">
+                <canvas id="chiNhanhChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    @* Table *@
+    <div class="db-card">
+        <div class="db-toolbar" style="border-bottom:1px solid rgba(255,255,255,0.06);">
+            <div>
+                <div class="db-name"><i class="fas fa-table me-2"></i>Doanh thu theo chi nhánh</div>
+            </div>
+        </div>
+        <div class="db-table-responsive">
+            <table class="db-table" style="min-width:600px;">
+                <colgroup>
+                    <col style="width:60%" />
+                    <col style="width:40%" />
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th>Chi nhánh</th>
+                        <th>Doanh thu</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.DoanhThuChiNhanh.OrderByDescending(d => d.TongDoanhThu))
+                    {
+                        <tr>
+                            <td><div class="db-name">@item.TenChiNhanh</div></td>
+                            <td><span class="db-money">@item.TongDoanhThu.ToString("N0")₫</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
+        Chart.defaults.color = 'rgba(255,255,255,0.6)';
+        Chart.defaults.borderColor = 'rgba(255,255,255,0.08)';
+        Chart.defaults.scale.grid.color = 'rgba(255,255,255,0.06)';
+
+        // Line chart with sales + deposit series
+        const labels = @Html.Raw(Model.JsonLabels);
+        const dataObj = @Html.Raw(Model.JsonData);
+        const salesData = dataObj.sales || [];
+        const depositData = dataObj.deposits || [];
+        new Chart(document.getElementById('revenueChart'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Doanh thu bán xe (VNĐ)',
+                        data: salesData,
+                        borderColor: '#74c0fc',
+                        backgroundColor: 'rgba(13, 110, 253, 0.15)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 3
+                    },
+                    {
+                        label: 'Tiền cọc (VNĐ)',
+                        data: depositData,
+                        borderColor: '#ffd43b',
+                        backgroundColor: 'rgba(255, 193, 7, 0.12)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: true } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { callback: v => v.toLocaleString('vi-VN') + '₫' }
+                    },
+                    x: { ticks: { maxTicksLimit: 15 } }
+                }
+            }
+        });
+
+        // Bar chart by showroom
+        const cnData = @Html.Raw(Model.JsonDataChiNhanh);
+        if (cnData && cnData.length > 0) {
+            new Chart(document.getElementById('chiNhanhChart'), {
+                type: 'bar',
+                data: {
+                    labels: cnData.map(d => d.label),
+                    datasets: [{
+                        label: 'Doanh thu (VNĐ)',
+                        data: cnData.map(d => d.value),
+                        backgroundColor: [
+                            '#0d6efd', '#6610f2', '#6f42c1', '#d63384',
+                            '#dc3545', '#fd7e14', '#ffc107', '#198754',
+                            '#20c997', '#0dcaf0'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { callback: v => v.toLocaleString('vi-VN') + '₫' }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+}

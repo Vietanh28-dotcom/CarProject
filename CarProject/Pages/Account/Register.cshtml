@@ -1,0 +1,105 @@
+@page
+@model CarProject.Pages.Account.RegisterModel
+
+@{
+    ViewData["Title"] = Model.XacNhanThanhCong ? "Đăng ký thành công" : Model.DaGuiMail ? "Kiểm tra email" : "Đăng ký tài khoản";
+}
+
+<div class="auth-page">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-5 col-lg-4">
+
+                @if (Model.XacNhanThanhCong)
+                {
+                    <div class="auth-card text-center">
+                        <div style="font-size: 3rem; margin-bottom: 1rem; color: #22c55e;"><i class="fas fa-check-circle"></i></div>
+                        <h2>Đăng ký thành công!</h2>
+                        <p class="auth-subtitle">Tài khoản của bạn đã được xác nhận.</p>
+                        <a asp-page="/Account/Login" class="btn-submit" style="display: inline-block; margin-top: 1rem; text-decoration: none;">Đăng nhập ngay</a>
+                    </div>
+                }
+                else if (Model.DaGuiMail)
+                {
+                    <div class="auth-card text-center">
+                        <div style="font-size: 3rem; margin-bottom: 1rem; color: var(--brand-silver);"><i class="fas fa-envelope"></i></div>
+                        <h2>Kiểm tra email</h2>
+                        <p class="auth-subtitle">Chúng tôi đã gửi link xác nhận đến email của bạn.</p>
+                        <p style="font-size: 0.82rem;">Vui lòng kiểm tra hộp thư và nhấn vào link để kích hoạt tài khoản.</p>
+                        <a asp-page="/Account/Login" style="display: inline-block; margin-top: 1rem; font-size: 0.82rem; color: var(--brand-silver);">Quay lại đăng nhập</a>
+                    </div>
+                }
+                else if (Model.Step2)
+                {
+                    <div class="auth-card">
+                        <h2>Đặt mật khẩu</h2>
+                        <p class="auth-subtitle">Tên đăng nhập: <strong>@Model.Email</strong></p>
+
+                        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+                        {
+                            <div style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; padding: 0.75rem 1rem; font-size: 0.82rem; margin-bottom: 1.5rem;">@Model.ErrorMessage</div>
+                        }
+
+                        <form method="post" asp-page-handler="Step2">
+                            <input type="hidden" name="email" value="@Model.Email" />
+
+                            <div class="mb-3">
+                                <label class="form-label">Tên đăng nhập</label>
+                                <input type="email" class="form-control" value="@Model.Email" readonly style="opacity:0.6;cursor:not-allowed;" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Mật khẩu</label>
+                                <div class="pwd-wrapper">
+                                    <input id="password" name="password" type="password" class="form-control pwd-input" required placeholder="Nhập mật khẩu" />
+                                    <button type="button" class="pwd-toggle" tabindex="-1"><i class="fas fa-eye"></i></button>
+                                </div>
+                                <div style="font-size: 0.72rem; margin-top: 4px;">Tối thiểu 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="confirmPassword" class="form-label">Xác nhận mật khẩu</label>
+                                <div class="pwd-wrapper">
+                                    <input id="confirmPassword" name="confirmPassword" type="password" class="form-control pwd-input" required placeholder="Nhập lại mật khẩu" />
+                                    <button type="button" class="pwd-toggle" tabindex="-1"><i class="fas fa-eye"></i></button>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn-submit">
+                                <i class="fas fa-user-plus me-2"></i> Đăng ký
+                            </button>
+                        </form>
+                    </div>
+                }
+                else
+                {
+                    <div class="auth-card">
+                        <h2>Đăng ký</h2>
+                        <p class="auth-subtitle">Sử dụng tài khoản Google của bạn</p>
+
+                        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+                        {
+                            <div style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; padding: 0.75rem 1rem; font-size: 0.82rem; margin-bottom: 1.5rem;">@Model.ErrorMessage</div>
+                        }
+
+                        <form method="post" asp-page-handler="Step1">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email Google</label>
+                                <input id="email" name="email" type="email" class="form-control" required placeholder="Nhập email Google của bạn" />
+                            </div>
+                            <button type="submit" class="btn-submit">
+                                <i class="fab fa-google me-2"></i> Đăng ký với Google
+                            </button>
+                        </form>
+
+                        <div class="auth-alt" style="margin-top: 1.5rem;">
+                            Đã có tài khoản?
+                            <a asp-page="/Account/Login">Đăng nhập</a>
+                        </div>
+                    </div>
+                }
+
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,40 @@
+@page "{id:int}"
+@model CarProject.Pages.Admin.KenhTuVan.EditModel
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6">
+            <h2>Sửa Kênh Tư Vấn</h2>
+            @if (Model.Kenh == null)
+            {
+                <div class="alert alert-danger">Không tìm thấy kênh tư vấn.</div>
+            }
+            else
+            {
+                <form method="post">
+                    <input type="hidden" asp-for="Kenh.MaKenh" />
+                    <div class="mb-3">
+                        <label class="form-label">Mã Kênh</label>
+                        <input class="form-control" value="@Model.Kenh.MaKenh" disabled />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Kenh.UrlMessenger" class="form-label">URL Messenger</label>
+                        <input asp-for="Kenh.UrlMessenger" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Kenh.UrlZalo" class="form-label">URL Zalo</label>
+                        <input asp-for="Kenh.UrlZalo" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Kenh.UrlSMS" class="form-label">URL SMS</label>
+                        <input asp-for="Kenh.UrlSMS" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <button type="submit" class="btn btn-primary">Cập nhật</button>
+                        <a asp-page="Index" class="btn btn-secondary">Hủy</a>
+                    </div>
+                </form>
+            }
+        </div>
+    </div>
+</div>

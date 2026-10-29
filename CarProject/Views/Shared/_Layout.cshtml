@@ -1,0 +1,369 @@
+﻿@inject CarProject.Data.AppDbContext _db
+@inject CarProject.Services.INotificationService _notif
+@using CarProject.Services
+@using Microsoft.EntityFrameworkCore
+@{
+    var hasLogin = User.IsJwtLoggedIn();
+    var userRole = User.GetJwtRole();
+    var userName = User.GetJwtDisplayName() ?? User.GetJwtUserName() ?? "";
+    var avatarUrl = User.GetJwtAvatar();
+    var adminMode = Context.Request.Cookies["AdminMode"];
+    var isAdminView = hasLogin && userRole == "Admin" && adminMode == "View";
+    var isLoggedIn = isAdminView ? false : hasLogin;
+    var notifCount = hasLogin ? await _notif.GetUnreadCountAsync(User.GetJwtUserName()!) : 0;
+    string ActivePage(string page) => ViewContext.RouteData.Values["page"]?.ToString() == page ? "active" : "";
+    string IsActiveDropdown() {
+        var p = ViewContext.RouteData.Values["page"]?.ToString();
+        return p == "/About" || p == "/Contact" ? "active" : "";
+    }
+    var contact = await _db.KenhTuVan.OrderBy(k => k.MaKenh).FirstOrDefaultAsync();
+    string CtUrl(string? url) => string.IsNullOrWhiteSpace(url) ? "javascript:void(0)" : url;
+    }
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - MyLxCar Showroom</title>
+    <link rel="icon" type="image/png" href="~/uploads/Logo/LogoWeb.png" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/CarProject.styles.css" asp-append-version="true" />
+</head>
+<body class="@(isAdminView ? "has-admin-bar" : "")">
+    @if (isAdminView)
+    {
+        <div class="admin-view-bar">
+            <div class="view-bar-brand">
+                <i class="fas fa-shield-alt"></i> Admin View
+            </div>
+            <div class="view-bar-actions">
+                <a asp-page="/Admin/ToggleMode" asp-route-mode="Control" asp-route-returnUrl="/Admin/Index" class="view-bar-btn"><i class="fas fa-cog"></i> Chế độ Quản trị</a>
+                <a asp-page="/Account/Logout" class="view-bar-btn" style="border-color: rgba(220,53,69,0.3); color: #dc3545;"><i class="fas fa-sign-out-alt"></i> Thoát</a>
+            </div>
+        </div>
+    }
+    <header>
+        <nav class="navbar navbar-premium">
+            <div class="container nav-container">
+                <!-- Brand - left (fixed) -->
+                <a class="navbar-brand" asp-page="/Index" aria-label="MyLxCar">
+                    <img src="~/uploads/Logo/LogoTrenChu.png" alt="MyLxCar" class="brand-logo" />
+                    <span class="brand-text">MyLxCar</span>
+                </a>
+
+                <!-- Center: nav menu (horizontally scrollable when space runs out) -->
+                <div class="nav-menu" id="navMenu">
+                    <div class="nav-menu-scroll" id="navMenuScroll">
+                        <ul class="navbar-nav">
+                            <li class="nav-item"><a class="nav-link @ActivePage("/Index")" asp-page="/Index"><i class="nav-icon fas fa-home" aria-hidden="true"></i><span>Trang chủ</span></a></li>
+                            <li class="nav-item"><a class="nav-link @ActivePage("/Cars")" asp-page="/Cars"><i class="nav-icon fas fa-car" aria-hidden="true"></i><span>Danh sách xe</span></a></li>
+                            <li class="nav-item"><a class="nav-link @ActivePage("/Showroom")" asp-page="/Showroom"><i class="nav-icon fas fa-store" aria-hidden="true"></i><span>Showroom</span></a></li>
+                            <li class="nav-item"><a class="nav-link @ActivePage("/Compare")" asp-page="/Compare"><i class="nav-icon fas fa-balance-scale" aria-hidden="true"></i><span>So sánh</span></a></li>
+                            <li class="nav-item"><a class="nav-link @ActivePage("/TestDrive")" asp-page="/TestDrive"><i class="nav-icon fas fa-calendar-check" aria-hidden="true"></i><span>Lái thử</span></a></li>
+                            <li class="nav-item nav-item-dropdown" id="navAboutItem">
+                                <a class="nav-link dropdown-toggle @IsActiveDropdown()" href="javascript:void(0)" id="navAboutToggle"><i class="nav-icon fas fa-info-circle" aria-hidden="true"></i><span>Giới thiệu</span></a>
+                                <div class="nav-dropdown-menu">
+                                    <a class="nav-dropdown-item" asp-page="/About"><i class="fas fa-building"></i> Về chúng tôi</a>
+                                    <a class="nav-dropdown-item" asp-page="/Contact"><i class="fas fa-envelope"></i> Liên hệ</a>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Right: actions group (fixed) -->
+                <div class="nav-actions">
+                    <!-- Theme toggle -->
+                    <button class="nav-icon-btn theme-toggle-btn" id="themeToggle" type="button" title="Chuyển giao diện" aria-label="Chuyển giao diện">
+                        <i class="fas fa-moon" id="themeIcon"></i>
+                    </button>
+
+                    <!-- Cart icon -->
+                    <a asp-page="/Orders/Cart/Index" class="nav-icon-btn nav-cart-link" title="Giỏ hàng" aria-label="Giỏ hàng">
+                        <i class="fas fa-shopping-bag"></i>
+                        <span class="cart-badge" id="cartCount">0</span>
+                    </a>
+
+                    <!-- Notification bell -->
+                    <a asp-page="/Notifications/Index" class="nav-icon-btn nav-notif-link" title="Thông báo" aria-label="Thông báo">
+                        <i class="fas fa-bell"></i>
+                        @if (notifCount > 0)
+                        {
+                            <span class="notif-badge" id="notifBadge">@notifCount</span>
+                        }
+                    </a>
+
+                    <!-- Auth - right -->
+                    <div class="nav-auth">
+                        @if (isLoggedIn)
+                        {
+                            <div class="nav-user dropdown">
+                                <a class="user-avatar-link" asp-page="/Profile" title="Xem đơn cọc của tôi">
+                                    <div class="auth-avatar">
+                                        @if (!string.IsNullOrEmpty(avatarUrl))
+                                        {
+                                            <img src="@avatarUrl?v=@DateTime.Now.Ticks" alt="" />
+                                        }
+                                        else
+                                        {
+                                            <i class="fas fa-user"></i>
+                                        }
+                                    </div>
+                                </a>
+                                <a class="nav-user-toggle dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <span class="user-name">@userName</span>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" style="min-width: 220px;">
+                                    <li><a class="dropdown-item" asp-page="/Profile"><i class="fas fa-user-cog me-2"></i> Tài khoản</a></li>
+                                    <li><a class="dropdown-item" asp-page="/Profile" asp-fragment="deposits"><i class="fas fa-file-invoice me-2"></i> Đơn cọc của tôi</a></li>
+                                    <li><a class="dropdown-item" asp-page="/Notifications/Index"><i class="fas fa-bell me-2"></i> Thông báo <span id="notifDropdownCount">@(notifCount > 0 ? $"(+{notifCount})" : "")</span></a></li>
+                                    <li><a class="dropdown-item" asp-page="/Orders/Cart/Index"><i class="fas fa-shopping-bag me-2"></i> Giỏ hàng</a></li>
+                                    @if (userRole == "Quản Lý")
+                                    {
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item admin-link" asp-page="/QuanLy/Dashboard"><i class="fas fa-chart-line me-2"></i> Dashboard</a></li>
+                                        <li><a class="dropdown-item admin-link" asp-page="/QuanLy/LichHen"><i class="fas fa-calendar-alt me-2"></i> Lịch hẹn</a></li>
+                                        <li><a class="dropdown-item admin-link" asp-page="/QuanLy/DonCoc"><i class="fas fa-file-invoice me-2"></i> Đơn cọc</a></li>
+                                        <li><a class="dropdown-item admin-link" asp-page="/QuanLy/NhapHang"><i class="fas fa-warehouse me-2"></i> Nhập hàng</a></li>
+                                        <li><a class="dropdown-item admin-link" asp-page="/QuanLy/Kho"><i class="fas fa-boxes-stacked me-2"></i> Kho showroom</a></li>
+                                    }
+                                    @if (userRole == "Admin" && adminMode != "View")
+                                    {
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item admin-link" asp-page="/Admin/Index"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a></li>
+                                        <li><a class="dropdown-item admin-link" asp-page="/Admin/HangXe/Index"><i class="fas fa-car me-2"></i> Hãng xe</a></li>
+                                        <li><a class="dropdown-item admin-link" asp-page="/Admin/DongXe/Index"><i class="fas fa-car-side me-2"></i> Dòng xe</a></li>
+                                        <li><a class="dropdown-item admin-link" asp-page="/Admin/PhienBan/Index"><i class="fas fa-tag me-2"></i> Phiên bản</a></li>
+                                        <li><a class="dropdown-item admin-link" asp-page="/Admin/Users/Index"><i class="fas fa-users me-2"></i> Người dùng</a></li>
+                                        <li><a class="dropdown-item admin-link" asp-page="/Admin/DonCoc/Index"><i class="fas fa-file-invoice me-2"></i> Đơn cọc</a></li>
+                                        <li><a class="dropdown-item admin-link" asp-page="/Admin/LichHen/Index"><i class="fas fa-calendar-alt me-2"></i> Lịch hẹn</a></li>
+                                        <li><a class="dropdown-item admin-link" asp-page="/Admin/HoaDon/Index"><i class="fas fa-file-invoice-dollar me-2"></i> Hóa đơn</a></li>
+                                        <li><a class="dropdown-item admin-link" asp-page="/Admin/ChiNhanh/Index"><i class="fas fa-building me-2"></i> Chi nhánh</a></li>
+                                        <li><a class="dropdown-item admin-link" asp-page="/Admin/KhuyenMai/Index"><i class="fas fa-gift me-2"></i> Khuyến mãi</a></li>
+                                        <li><a class="dropdown-item admin-link" asp-page="/Admin/KenhTuVan/Index"><i class="fas fa-headset me-2"></i> Kênh tư vấn</a></li>
+                                        <li><a class="dropdown-item admin-link" asp-page="/Admin/ThongKe/Index"><i class="fas fa-chart-bar me-2"></i> Thống kê</a></li>
+                                        <li><a class="dropdown-item admin-link" asp-page="/Admin/Logs/Index"><i class="fas fa-history me-2"></i> Nhật ký</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" asp-page="/Admin/ToggleMode" asp-route-mode="Control" asp-route-returnUrl="/"><i class="fas fa-eye me-2"></i> Xem giao diện</a></li>
+                                        <li><a class="dropdown-item" asp-page="/Admin/ToggleMode" asp-route-mode="View" asp-route-returnUrl="/"><i class="fas fa-wrench me-2"></i> Sửa giao diện</a></li>
+                                    }
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item logout-link" asp-page="/Account/Logout"><i class="fas fa-sign-out-alt me-2"></i> Đăng xuất</a></li>
+                                </ul>
+                            </div>
+                        }
+                        else
+                        {
+                            <a class="btn-auth btn-register" asp-page="/Account/Register">
+                                <i class="fas fa-user-plus"></i><span class="btn-auth-text">Đăng ký</span>
+                            </a>
+                            <a class="btn-auth btn-login" asp-page="/Account/Login">
+                                <i class="far fa-user"></i><span class="btn-auth-text">Đăng nhập</span>
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="page-transition @(isAdminView ? "has-admin-bar-offset" : "")">
+        @RenderBody()
+    </main>
+
+    <!-- Floating Contact Buttons -->
+    <div class="contact-floating">
+        <a href="@CtUrl(contact?.UrlMessenger)" class="btn-contact btn-messenger" title="Messenger" target="_blank" rel="noopener">
+            <i class="fab fa-facebook-messenger"></i>
+            <span class="tooltip-text">Chat Messenger</span>
+        </a>
+        <a href="@CtUrl(contact?.UrlZalo)" class="btn-contact btn-zalo" title="Zalo" target="_blank" rel="noopener">
+            <i class="fas fa-comment-dots"></i>
+            <span class="tooltip-text">Chat Zalo</span>
+        </a>
+        <a href="@(string.IsNullOrWhiteSpace(contact?.UrlSMS) ? "tel:19006886" : "tel:" + contact.UrlSMS.Trim())" class="btn-contact btn-phone" title="Gọi ngay">
+            <i class="fas fa-phone-alt"></i>
+            <span class="tooltip-text">@(string.IsNullOrWhiteSpace(contact?.UrlSMS) ? "1800 6886" : contact.UrlSMS.Trim())</span>
+        </a>
+    </div>
+
+    <!-- Toast container -->
+    <div class="toast-stack" id="toastContainer"></div>
+
+    <footer class="footer-premium">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <a class="footer-brand" asp-page="/Index">
+                        <div class="footer-brand-group">
+                            <img src="~/uploads/Logo/LogoTrenChu.png" alt="MyLxCar" class="footer-logo" />
+                            <span class="footer-brand-text">MyLxCar</span>
+                        </div>
+                    </a>
+                    <p class="footer-desc">Showroom phân phối MyLxCar chính hãng hàng đầu tại Việt Nam. Mang các dòng xe hạng sang đột phá công nghệ và thiết kế kiêu hãnh tới khách hàng Việt.</p>
+                    <div class="social-links">
+                        <a href="#" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" title="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="#" title="YouTube"><i class="fab fa-youtube"></i></a>
+                        <a href="#" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2">
+                    <h6>Dòng xe</h6>
+                    <p><a asp-page="/Cars">Showroom</a></p>
+                    <p><a asp-page="/Compare">So sánh xe</a></p>
+                </div>
+                <div class="col-lg-3">
+                    <h6>Dịch vụ & Tiện ích</h6>
+                    <p><a asp-page="/TestDrive">Đăng ký lái thử</a></p>
+                    <p><a asp-page="/Profile">Lịch sử mua xe</a></p>
+                    <p><a asp-page="/Cars">Chương trình ưu đãi</a></p>
+                </div>
+                <div class="col-lg-3">
+                    <h6>Hệ thống Showroom</h6>
+                    @{
+                        var activeBranches = _db.ChiNhanhShowroom
+                            .Where(cn => cn.TrangThai == "Hoạt động")
+                            .ToList();
+                    }
+                    @foreach (var cn in activeBranches)
+                    {
+                        <p class="mb-2"><i class="fas fa-map-marker-alt me-2" style="color: var(--brand-silver);"></i> @cn.DiaChi, @cn.ThanhPho</p>
+                    }
+                    @if (activeBranches.Any())
+                    {
+                        <p><i class="fas fa-phone-alt me-2" style="color: var(--brand-silver);"></i> Hotline: @activeBranches.First().DuongDayNong</p>
+                    }
+                    <p class="mb-0"><i class="far fa-envelope me-2" style="color: var(--brand-silver);"></i> contact@mylxcar.vn</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                &copy; @DateTime.Now.Year MyLxCar Showroom Auto. Tất cả quyền được bảo lưu.
+            </div>
+        </div>
+    </footer>
+
+    <div class="theme-curtain" id="themeCurtain">
+        <div class="theme-curtain-left"></div>
+        <div class="theme-curtain-right"></div>
+    </div>
+
+    @await RenderSectionAsync("Styles", required: false)
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        $(function() {
+            function updateCartCount() {
+                $.get('/api/cart/count', function(data) {
+                    var badge = $('#cartCount');
+                    var count = data.count || 0;
+                    if (count > 0) {
+                        var display = count >= 10 ? '9+' : count;
+                        var prev = badge.data('prev') || 0;
+                        badge.text(display).addClass('visible');
+                        if (count !== prev) {
+                            badge.removeClass('cart-badge-bounce');
+                            void badge[0].offsetWidth;
+                            badge.addClass('cart-badge-bounce');
+                        }
+                        badge.data('prev', count);
+                    } else {
+                        badge.removeClass('visible').removeClass('cart-badge-bounce');
+                        badge.data('prev', 0);
+                    }
+                });
+            }
+            window.showToast = function(message, isError) {
+                var container = $('#toastContainer');
+                var id = 't' + Date.now() + Math.random().toString(36).substr(2, 4);
+                var toast = $(
+                    '<div class="toast-item' + (isError ? ' toast-error' : '') + '" id="' + id + '">' +
+                        '<div class="toast-icon"><i class="fas ' + (isError ? 'fa-exclamation-circle' : 'fa-check-circle') + '"></i></div>' +
+                        '<div class="toast-body">' +
+                            '<div class="toast-title">' + (isError ? 'Thất bại' : 'Thành công') + '</div>' +
+                            '<div class="toast-msg">' + message + '</div>' +
+                        '</div>' +
+                        '<button class="toast-close" onclick="closeToast(\'' + id + '\')">&times;</button>' +
+                        '<div class="toast-progress"></div>' +
+                    '</div>'
+                );
+                container.prepend(toast);
+                requestAnimationFrame(function() {
+                    toast.addClass('toast-visible');
+                });
+                var progress = toast.find('.toast-progress');
+                progress.css('animation', 'toastProgress 3s linear forwards');
+                var timer = setTimeout(function() {
+                    closeToast(id);
+                }, 3200);
+                toast.data('timer', timer);
+            };
+            window.closeToast = function(id) {
+                var toast = $('#' + id);
+                if (!toast.length) return;
+                var timer = toast.data('timer');
+                if (timer) clearTimeout(timer);
+                toast.removeClass('toast-visible').addClass('toast-hide');
+                setTimeout(function() { toast.remove(); }, 350);
+            };
+            window.addToCart = function(maPhienBan, tenPhienBan, tenDong, giaNiemYet, mauSac, dongCo, hopSo, duongDanAnh) {
+                $.ajax({
+                    url: '/api/cart/add',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        maPhienBan: maPhienBan,
+                        tenPhienBan: tenPhienBan,
+                        tenDong: tenDong,
+                        giaNiemYet: giaNiemYet,
+                        mauSac: mauSac || '',
+                        dongCo: dongCo || '',
+                        hopSo: hopSo || '',
+                        duongDanAnh: duongDanAnh || ''
+                    }),
+success: function(data) {
+                        if (data.success) {
+                            updateCartCount();
+                            showToast('Đã thêm <strong>' + tenPhienBan + '</strong> vào giỏ hàng.');
+                        } else if (data.error) {
+                            showToast(data.error, true);
+                        }
+                    },
+                    error: function() {
+                        showToast('Vui lòng đăng nhập để sử dụng giỏ hàng.', true);
+                    }
+                });
+            };
+            function updateNotifCount() {
+                $.get('/api/notifications/count', function(data) {
+                    var count = data.count || 0;
+                    var link = $('.nav-notif-link');
+                    var badge = $('#notifBadge');
+                    if (count > 0) {
+                        if (!badge.length) {
+                            badge = $('<span class="notif-badge" id="notifBadge"></span>').appendTo(link);
+                        }
+                        badge.text(count >= 10 ? '9+' : count);
+                    } else if (badge.length) {
+                        badge.remove();
+                    }
+                    var dd = $('#notifDropdownCount');
+                    if (dd.length) dd.text(count > 0 ? '(+' + count + ')' : '');
+                });
+            }
+            updateNotifCount();
+            setInterval(updateNotifCount, 30000);
+            $(document).on('visibilitychange focus', function() {
+                if (!document.hidden) updateNotifCount();
+            });
+        });
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

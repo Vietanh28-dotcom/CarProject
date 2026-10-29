@@ -1,0 +1,314 @@
+﻿@page
+@model CarProject.Pages.QuanLy.DashboardModel
+@{
+    ViewData["Title"] = "Dashboard quản lý";
+    Layout = "_Layout";
+}
+
+<style>
+    .ql-header { background: linear-gradient(135deg, #0d0d14, #161b2e); color: #fff; padding: 2rem 0; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .ql-card { background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; box-shadow: 0 8px 30px rgba(0,0,0,0.35); padding: 1.5rem; height: 100%; color:#fff; }
+    .ql-card .stat-value { font-size: 1.8rem; font-weight: 700; color: #fff; }
+    .ql-card .stat-label { font-size: 0.85rem; color: rgba(255,255,255,0.6); }
+    .ql-card .stat-icon { font-size: 2rem; color: var(--brand-gold, #c8a45c); }
+    .ql-card .text-muted { color: rgba(255,255,255,0.5) !important; }
+    .ql-card table tr td { color:#ffffff; border-color: rgba(255,255,255,0.08); }
+    .ql-card table th { color:#ffffff; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.12); }
+    .ql-card table a { color:#93c5fd; }
+    /* giữ nền tối + chữ trắng sáng cho bảng QL — bất kể theme tối/sáng */
+    .ql-card { background:#0d0d14 !important; color:#fff !important; box-shadow:0 8px 30px rgba(0,0,0,0.35) !important; }
+    .ql-card table, .ql-card .table, .ql-card .table-responsive, .ql-card .table-responsive .table { background:transparent !important; }
+    .ql-card table { --bs-table-bg:transparent !important; --bs-table-color:#fff !important; --bs-table-border-color:rgba(255,255,255,0.08) !important; }
+    .ql-card h5, .ql-card h6, .ql-card .stat-label, .ql-card .stat-value, .ql-header {color: #ffffff !important;}
+    [data-theme="light"] .ql-card { background:#e9ebee !important; color:#1a1a1a !important; box-shadow:0 8px 30px rgba(0,0,0,0.1) !important; border-color:#d5d7db !important; }
+    [data-theme="light"] .ql-card table { --bs-table-bg:transparent !important; --bs-table-color:#1a1a1a !important; --bs-table-border-color:#dadce0 !important; }
+    [data-theme="light"] .ql-card table th, [data-theme="light"] .ql-card table td,
+    [data-theme="light"] .ql-card .table-responsive th, [data-theme="light"] .ql-card .table-responsive td { color:#1a1a1a !important; background:transparent !important; border-color:#dadce0 !important; }
+    [data-theme="light"] .ql-card h5, [data-theme="light"] .ql-card h6,
+    [data-theme="light"] .ql-card .stat-label, [data-theme="light"] .ql-card .stat-value,
+    [data-theme="light"] .ql-card .text-muted { color:#1a1a1a !important; }
+    [data-theme="light"] .ql-card table a { color:#1d4ed8 !important; }
+    .ql-showroom-badge { background: rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 0.5rem 1rem; display: inline-flex; align-items: center; gap: 0.5rem; }
+    .chart-container { position: relative; height: 300px; width: 100%; }
+</style>
+
+<div class="ql-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 style="font-size: 1.5rem; font-weight: 600; margin: 0;">
+                    <i class="fas fa-chart-line me-2"></i> Dashboard quản lý
+                </h1>
+                <p class="mb-0 mt-1" style="opacity: 0.7;">Xin chào, <strong>@Model.TenHienThi</strong></p>
+            </div>
+            <div class="col-md-4 text-md-end mt-2 mt-md-0">
+                @if (Model.Showroom != null)
+                {
+                    <div class="ql-showroom-badge">
+                        <i class="fas fa-building"></i>
+                        <span>@Model.Showroom.TenChiNhanh</span>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container" style="padding-bottom: 3rem;">
+    @if (Model.Showroom == null)
+    {
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            Bạn chưa được phân công quản lý showroom nào. Vui lòng liên hệ Admin.
+        </div>
+        return;
+    }
+
+    @* Thông tin showroom *@
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="ql-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-label">Doanh thu hôm nay</div>
+                        <div class="stat-value">@Model.DoanhThuHomNay.ToString("N0")₫</div>
+                        <small class="text-muted">@Model.SoDonHomNay hoá đơn bán</small>
+                    </div>
+                    <div class="stat-icon"><i class="fas fa-coins"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="ql-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-label">Doanh thu tháng này</div>
+                        <div class="stat-value">@Model.DoanhThuThangNay.ToString("N0")₫</div>
+                        <small class="text-muted">@Model.SoDonThangNay hoá đơn bán</small>
+                    </div>
+                    <div class="stat-icon"><i class="fas fa-calendar-alt"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="ql-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-label">Tiền cọc thu về tháng này</div>
+                        <div class="stat-value" style="color:#2dd4bf;">@Model.DoanhThuCocThangNay.ToString("N0")₫</div>
+                        <small class="text-muted">20%/15% cọc theo từng xe</small>
+                    </div>
+                    <div class="stat-icon"><i class="fas fa-hand-holding-usd"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="ql-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-label">Tổng đơn đã xử lý</div>
+                        <div class="stat-value">@Model.TongDon</div>
+                        <small class="text-muted">từ trước đến nay</small>
+                    </div>
+                    <div class="stat-icon"><i class="fas fa-file-invoice"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Thông tin showroom chi tiết *@
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <div class="ql-card">
+                <h5 style="font-weight: 600; margin-bottom: 1rem;"><i class="fas fa-info-circle me-2"></i>Thông tin showroom</h5>
+                @if (Model.Message != null)
+                {
+                    <div class="alert @(Model.MessageType == "success" ? "alert-success" : "alert-danger") py-2 px-3" style="font-size:0.85rem;">@Model.Message</div>
+                }
+                <table class="table table-sm table-borderless mb-2">
+                    <tr><td>Tên</td><td><strong>@Model.Showroom.TenChiNhanh</strong></td></tr>
+                    <tr><td>Địa chỉ</td><td>@Model.Showroom.DiaChi</td></tr>
+                    <tr><td>Thành phố</td><td>@Model.Showroom.ThanhPho</td></tr>
+                    <tr><td>Hotline</td><td><a href="tel:@Model.Showroom.DuongDayNong">@Model.Showroom.DuongDayNong</a></td></tr>
+                    <tr><td>Trạng thái</td>
+                        <td>
+                            @if (Model.Showroom.TrangThai == "Hoạt động")
+                            {
+                                <span class="badge bg-success">Hoạt động</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">@Model.Showroom.TrangThai</span>
+                            }
+                        </td>
+                    </tr>
+                </table>
+                <button class="btn btn-sm btn-outline-light" type="button" onclick="toggleShowroomEdit()"><i class="fas fa-edit me-1"></i> Sửa thông tin showroom</button>
+                <form method="post" asp-page-handler="Showroom" id="showroomEditForm" style="display:none;margin-top:0.75rem;">
+                    <div class="mb-2">
+                        <label class="form-label small mb-1">Địa chỉ quán</label>
+                        <input type="text" name="NewShowroomDiaChi" class="form-control form-control-sm" value="@Model.Showroom.DiaChi" />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small mb-1">Thành phố</label>
+                        <input type="text" name="NewShowroomThanhPho" class="form-control form-control-sm" value="@Model.Showroom.ThanhPho" />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small mb-1">Hotline</label>
+                        <input type="tel" name="NewShowroomDuongDayNong" class="form-control form-control-sm" value="@Model.Showroom.DuongDayNong" />
+                    </div>
+                    <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-save me-1"></i> Lưu showroom</button>
+                </form>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="ql-card">
+                <h5 style="font-weight: 600; margin-bottom: 1rem;"><i class="fas fa-user me-2"></i>Thông tin cá nhân</h5>
+                @if (Model.TaiKhoan != null)
+                {
+                    <div class="d-flex align-items-center mb-3">
+                        <img id="qlAvatarImg" src="@(Model.TaiKhoan.AvatarUrl ?? "/uploads/avatars/default.png")" alt="Avatar"
+                             style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid #c8a45c;" />
+                        <div class="ms-3">
+                            <input type="file" id="qlAvatarInput" accept="image/*" style="display:none;" />
+                            <button type="button" class="btn btn-sm btn-outline-light" onclick="document.getElementById('qlAvatarInput').click()">
+                                <i class="fas fa-camera me-1"></i> Đổi ảnh đại diện
+                            </button>
+                        </div>
+                    </div>
+                    <form method="post" asp-page-handler="Profile">
+                        <div class="mb-2">
+                            <label class="form-label small mb-1">Tên hiển thị</label>
+                            <input type="text" name="NewTenHienThi" class="form-control form-control-sm" value="@(Model.TaiKhoan.TenHienThi ?? Model.TenDangNhap)" />
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small mb-1">Email</label>
+                            <input type="email" name="NewEmail" class="form-control form-control-sm" value="@Model.TaiKhoan.Email" />
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small mb-1">Số điện thoại</label>
+                            <input type="tel" name="NewSoDienThoai" class="form-control form-control-sm" value="@Model.TaiKhoan.SoDienThoai" />
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small mb-1">Địa chỉ</label>
+                            <input type="text" name="NewDiaChi" class="form-control form-control-sm" value="@Model.TaiKhoan.DiaChi" />
+                        </div>
+                        <div class="mb-2 small text-muted">Tên đăng nhập: <strong>@Model.TenDangNhap</strong></div>
+                        <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-save me-1"></i> Lưu thông tin</button>
+                    </form>
+                }
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="ql-card">
+                <h5 style="font-weight: 600; margin-bottom: 1rem;"><i class="fas fa-chart-bar me-2"></i>Doanh thu 30 ngày</h5>
+                <div class="chart-container">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Bảng doanh thu 7 ngày gần nhất *@
+    @if (Model.DoanhThuTheoNgay.Any())
+    {
+        <div class="ql-card">
+            <h5 style="font-weight: 600; margin-bottom: 1rem;"><i class="fas fa-table me-2"></i>Chi tiết doanh thu 7 ngày gần nhất</h5>
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Ngày</th>
+                            <th class="text-end">Doanh thu</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.DoanhThuTheoNgay.OrderByDescending(d => d.Ngay).Take(7))
+                        {
+                            <tr>
+                                <td>@item.Ngay.ToString("dd/MM/yyyy")</td>
+                                <td class="text-end">@item.TongTien.ToString("N0")₫</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
+        const labels = @Html.Raw(Model.JsonLabels);
+        const data = @Html.Raw(Model.JsonData);
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Doanh thu (VNĐ)',
+                    data: data,
+                    borderColor: '#c8a45c',
+                    backgroundColor: 'rgba(200, 164, 92, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#c8a45c'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: v => v.toLocaleString('vi-VN') + '₫'
+                        }
+                    },
+                    x: {
+                        ticks: { maxTicksLimit: 10 }
+                    }
+                }
+            }
+        });
+        function toggleShowroomEdit() {
+            var f = document.getElementById('showroomEditForm');
+            f.style.display = f.style.display === 'none' ? 'block' : 'none';
+        }
+        (function () {
+            var input = document.getElementById('qlAvatarInput');
+            if (!input) return;
+            input.addEventListener('change', function () {
+                var file = input.files[0];
+                if (!file) return;
+                var reader = new FileReader();
+                reader.onload = async function () {
+                    try {
+                        var res = await fetch('/api/upload-avatar', {
+                            method: 'POST',
+                            body: JSON.stringify({ avatarBase64: reader.result }),
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'same-origin'
+                        });
+                        var data = await res.json();
+                        if (res.ok && data && data.success) {
+                            var img = document.getElementById('qlAvatarImg');
+                            if (img && data.url) img.src = data.url;
+                        } else {
+                            location.reload();
+                        }
+                    } catch (e) {
+                        location.reload();
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        })();
+    </script>
+}

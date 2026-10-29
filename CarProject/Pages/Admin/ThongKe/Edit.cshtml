@@ -1,0 +1,60 @@
+@page "{id:int}"
+@model CarProject.Pages.Admin.ThongKe.EditModel
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6">
+            <h2>Sửa Thống Kê</h2>
+            @if (Model.ThongKe == null)
+            {
+                <div class="alert alert-danger">Không tìm thấy thống kê.</div>
+            }
+            else
+            {
+                <form method="post">
+                    <input type="hidden" asp-for="ThongKe.MaThongKe" />
+                    <div class="mb-3">
+                        <label asp-for="ThongKe.KyBaoCao" class="form-label">Kỳ Báo Cáo</label>
+                        <input asp-for="ThongKe.KyBaoCao" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="ThongKe.MaChiNhanh" class="form-label">Chi Nhánh</label>
+                        <select asp-for="ThongKe.MaChiNhanh" asp-items="Model.ChiNhanhList" class="form-control" required></select>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="ThongKe.TongDoanhThu" class="form-label">Tổng Doanh Thu</label>
+                        <input asp-for="ThongKe.TongDoanhThu" class="form-control" type="number" required />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="ThongKe.TongTienCocThuVe" class="form-label">Tổng Tiền Cọc Thu Về</label>
+                        <input asp-for="ThongKe.TongTienCocThuVe" class="form-control" type="number" required />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="ThongKe.TongSoXeDaBan" class="form-label">Tổng Số Xe Đã Bán</label>
+                        <input asp-for="ThongKe.TongSoXeDaBan" class="form-control" type="number" required />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="ThongKe.SoDonCocBiHuy" class="form-label">Số Đơn Cọc Bị Hủy</label>
+                        <input asp-for="ThongKe.SoDonCocBiHuy" class="form-control" type="number" required />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="ThongKe.TongLuotXemWeb" class="form-label">Tổng Lượt Xem Web</label>
+                        <input asp-for="ThongKe.TongLuotXemWeb" class="form-control" type="number" required />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="ThongKe.TongLuotLaiThu" class="form-label">Tổng Lượt Lái Thử</label>
+                        <input asp-for="ThongKe.TongLuotLaiThu" class="form-control" type="number" required />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="ThongKe.MaDongXeBanChayNhat" class="form-label">Dòng Xe Bán Chạy</label>
+                        <select asp-for="ThongKe.MaDongXeBanChayNhat" asp-items="Model.DongXeList" class="form-control" required></select>
+                    </div>
+                    <div class="mb-3">
+                        <button type="submit" class="btn btn-primary">Cập nhật</button>
+                        <a asp-page="Index" class="btn btn-secondary">Hủy</a>
+                    </div>
+                </form>
+            }
+        </div>
+    </div>
+</div>

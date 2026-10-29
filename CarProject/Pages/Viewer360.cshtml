@@ -1,0 +1,64 @@
+@page
+@model Viewer360Model
+
+@{
+    ViewData["Title"] = "Xem xe 360\u00b0";
+}
+
+<div class="about-page">
+    <div class="about-hero" style="min-height: 70vh;">
+        <div style="position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(192,192,192,0.04) 0%, transparent 60%); pointer-events: none;"></div>
+        <div class="container position-relative text-center">
+            <p class="section-label justify-content-center" style="margin-bottom: 1.5rem;">Khám phá 360\u00b0</p>
+            <h1>Xe của bạn, mọi góc nhìn</h1>
+            <p style="color: var(--text-muted); max-width: 500px; margin: 1rem auto 2rem;">Chọn dòng xe để xem toàn cảnh nội thất và ngoại thất</p>
+
+            <form method="get" class="row justify-content-center g-2">
+                <div class="col-auto">
+                    <select name="id" class="form-control" style="min-width: 280px; background: var(--brand-gray); border: 1px solid rgba(255,255,255,0.1); color: var(--brand-white); padding: 0.7rem 1rem;">
+                        <option value="">-- Chọn dòng xe --</option>
+                        @foreach (var d in Model.DanhSachXe)
+                        {
+                            <option value="@d.MaDong" selected="@(Model.SelectedId == d.MaDong)">@d.TenDong (@d.HangXe?.TenHang)</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn-premium btn-premium-solid" style="padding: 0.65rem 2rem;">
+                        <i class="fas fa-sync me-2"></i> Xem 360\u00b0
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (Model.SelectedXe != null)
+    {
+        <section class="section-premium section-premium-alt">
+            <div class="container">
+                <div class="glass-card p-5 text-center">
+                    <h3 style="font-family: var(--font-title); font-weight: 700; color: var(--brand-white); margin-bottom: 0.5rem;">@Model.SelectedXe.TenDong</h3>
+                    <p style="color: var(--text-muted); margin-bottom: 2rem;">@Model.SelectedXe.HangXe?.TenHang - @Model.SelectedXe.KieuDang</p>
+                    <div style="font-size: 10rem; line-height: 1; user-select: none;">
+                        <i class="fas fa-car" style="opacity: 0.2;"></i>
+                    </div>
+                    <p style="color: var(--text-faint); font-size: 0.82rem; margin-top: 2rem;">
+                        <i class="fas fa-sync me-1"></i> Kéo để xoay xe 360\u00b0 (Tính năng đang phát triển)
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-premium">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-lg-6">
+                        <a asp-page="/Details" asp-route-id="@Model.SelectedXe.MaDong" class="btn-premium btn-premium-solid" style="width: 100%; justify-content: center; padding: 1rem;">
+                            <i class="fas fa-info-circle me-2"></i> Xem chi tiết @Model.SelectedXe.TenDong
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    }
+</div>

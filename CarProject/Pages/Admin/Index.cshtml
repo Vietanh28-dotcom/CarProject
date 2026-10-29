@@ -1,0 +1,175 @@
+@page
+@model CarProject.Pages.Admin.IndexModel
+
+@{
+    ViewData["Title"] = "Dashboard";
+    var userName = User.GetJwtDisplayName() ?? User.GetJwtUserName() ?? "Admin";
+}
+
+<div class="container-fluid db-wrap">
+    <div class="db-toolbar">
+        <div>
+            <h1 class="db-title">Dashboard</h1>
+            <div class="db-subtitle">Xin chào, <strong style="color:#fff;">@userName</strong> · Tổng quan hệ thống</div>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="admin-card">
+                <div class="card-icon" style="background: rgba(13,110,253,0.12); color: #0d6efd;">
+                    <i class="fas fa-car"></i>
+                </div>
+                <div class="card-count">@Model.TotalHangXe</div>
+                <div class="card-label">Hãng xe</div>
+                <a asp-page="/Admin/HangXe/Index" class="card-link"></a>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="admin-card">
+                <div class="card-icon" style="background: rgba(40,167,69,0.12); color: #28a745;">
+                    <i class="fas fa-car-side"></i>
+                </div>
+                <div class="card-count">@Model.TotalDongXe</div>
+                <div class="card-label">Dòng xe</div>
+                <a asp-page="/Admin/DongXe/Index" class="card-link"></a>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="admin-card">
+                <div class="card-icon" style="background: rgba(255,193,7,0.12); color: #ffc107;">
+                    <i class="fas fa-tag"></i>
+                </div>
+                <div class="card-count">@Model.TotalPhienBan</div>
+                <div class="card-label">Phiên bản</div>
+                <a asp-page="/Admin/PhienBan/Index" class="card-link"></a>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="admin-card">
+                <div class="card-icon" style="background: rgba(108,117,125,0.12); color: #6c757d;">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="card-count">@Model.TotalUsers</div>
+                <div class="card-label">Người dùng</div>
+                <a asp-page="/Admin/Users/Index" class="card-link"></a>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="admin-card">
+                <div class="card-icon" style="background: rgba(220,53,69,0.12); color: #dc3545;">
+                    <i class="fas fa-building"></i>
+                </div>
+                <div class="card-count">@Model.TotalChiNhanh</div>
+                <div class="card-label">Chi nhánh</div>
+                <a asp-page="/Admin/ChiNhanh/Index" class="card-link"></a>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="admin-card">
+                <div class="card-icon" style="background: rgba(13,110,253,0.12); color: #0d6efd;">
+                    <i class="fas fa-gift"></i>
+                </div>
+                <div class="card-count">@Model.TotalKhuyenMai</div>
+                <div class="card-label">Khuyến mãi</div>
+                <a asp-page="/Admin/KhuyenMai/Index" class="card-link"></a>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="admin-card">
+                <div class="card-icon" style="background: rgba(255,193,7,0.12); color: #ffc107;">
+                    <i class="fas fa-history"></i>
+                </div>
+                <div class="card-count">@Model.TotalLogs</div>
+                <div class="card-label">Nhật ký</div>
+                <a asp-page="/Admin/Logs/Index" class="card-link"></a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="admin-card">
+                <div class="card-icon" style="background: rgba(40,167,69,0.12); color: #28a745;">
+                    <i class="fas fa-file-invoice"></i>
+                </div>
+                <div class="card-count">@Model.TotalDonCoc</div>
+                <div class="card-label">Đơn cọc</div>
+                <a asp-page="/Admin/DonCoc/Index" class="card-link"></a>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="admin-card">
+                <div class="card-icon" style="background: rgba(255,193,7,0.12); color: #ffc107;">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                </div>
+                <div class="card-count">@Model.TotalHoaDon</div>
+                <div class="card-label">Hóa đơn</div>
+                <a asp-page="/Admin/HoaDon/Index" class="card-link"></a>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="admin-card">
+                <div class="card-icon" style="background: rgba(23,162,184,0.12); color: #17a2b8;">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div class="card-count">@Model.TotalLichHen</div>
+                <div class="card-label">Lịch hẹn</div>
+                <a asp-page="/Admin/LichHen/Index" class="card-link"></a>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="admin-card">
+                <div class="card-icon" style="background: rgba(108,117,125,0.12); color: #6c757d;">
+                    <i class="fas fa-headset"></i>
+                </div>
+                <div class="card-count">@Model.TotalKenhTuVan</div>
+                <div class="card-label">Kênh tư vấn</div>
+                <a asp-page="/Admin/KenhTuVan/Index" class="card-link"></a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-3">
+            <div class="admin-card">
+                <div class="card-icon" style="background: rgba(13,110,253,0.12); color: #0d6efd;">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <div class="card-count">@Model.TotalThongKe</div>
+                <div class="card-label">Thống kê</div>
+                <a asp-page="/Admin/ThongKe/Index" class="card-link"></a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="db-card" style="padding:1.25rem;">
+        <h5 style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 1rem;">
+            <i class="fas fa-bolt me-2"></i> Truy cập nhanh
+        </h5>
+        <div class="row g-2">
+            <div class="col-md-3 col-6">
+                <a asp-page="/Admin/HangXe/Create" class="d-flex align-items-center gap-2" style="padding: 0.5rem 0.75rem; background: rgba(255,255,255,0.03); border-radius: 6px; color: var(--text-secondary); text-decoration: none; font-size: 0.78rem; transition: all 0.15s;">
+                    <i class="fas fa-plus-circle" style="color: #28a745; font-size: 0.7rem;"></i> Thêm hãng xe
+                </a>
+            </div>
+            <div class="col-md-3 col-6">
+                <a asp-page="/Admin/DongXe/Create" class="d-flex align-items-center gap-2" style="padding: 0.5rem 0.75rem; background: rgba(255,255,255,0.03); border-radius: 6px; color: var(--text-secondary); text-decoration: none; font-size: 0.78rem; transition: all 0.15s;">
+                    <i class="fas fa-plus-circle" style="color: #28a745; font-size: 0.7rem;"></i> Thêm dòng xe
+                </a>
+            </div>
+            <div class="col-md-3 col-6">
+                <a asp-page="/Admin/PhienBan/Create" class="d-flex align-items-center gap-2" style="padding: 0.5rem 0.75rem; background: rgba(255,255,255,0.03); border-radius: 6px; color: var(--text-secondary); text-decoration: none; font-size: 0.78rem; transition: all 0.15s;">
+                    <i class="fas fa-plus-circle" style="color: #28a745; font-size: 0.7rem;"></i> Thêm phiên bản
+                </a>
+            </div>
+            <div class="col-md-3 col-6">
+                <a asp-page="/Admin/ChiNhanh/Create" class="d-flex align-items-center gap-2" style="padding: 0.5rem 0.75rem; background: rgba(255,255,255,0.03); border-radius: 6px; color: var(--text-secondary); text-decoration: none; font-size: 0.78rem; transition: all 0.15s;">
+                    <i class="fas fa-plus-circle" style="color: #28a745; font-size: 0.7rem;"></i> Thêm chi nhánh
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

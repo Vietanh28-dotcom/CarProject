@@ -1,0 +1,76 @@
+@page
+@model CarProject.Pages.Admin.LichHen.CreateModel
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <h2>Thêm Lịch Hẹn Lái Thử</h2>
+            <form method="post">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="LichHen.MaKhachHang" class="form-label">Khách Hàng</label>
+                        <select asp-for="LichHen.MaKhachHang" asp-items="Model.KhachHangList" class="form-select" required>
+                            <option value="">-- Chọn khách hàng --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="LichHen.MaDong" class="form-label">Dòng Xe</label>
+                        <select asp-for="LichHen.MaDong" asp-items="Model.DongXeList" class="form-select" required>
+                            <option value="">-- Chọn dòng xe --</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="LichHen.MaChiNhanh" class="form-label">Chi Nhánh</label>
+                        <select asp-for="LichHen.MaChiNhanh" asp-items="Model.ChiNhanhList" class="form-select" required>
+                            <option value="">-- Chọn chi nhánh --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="LichHen.TrangThai" class="form-label">Trạng Thái</label>
+                        <select asp-for="LichHen.TrangThai" class="form-select" required>
+                            <option value="">-- Chọn --</option>
+                            <option value="Chờ xác nhận">Chờ xác nhận</option>
+                            <option value="Đã xác nhận">Đã xác nhận</option>
+                            <option value="Đã lái thử">Đã lái thử</option>
+                            <option value="Đã hủy">Đã hủy</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="LichHen.HoTenNguoiLai" class="form-label">Họ Tên Người Lái</label>
+                        <input asp-for="LichHen.HoTenNguoiLai" class="form-control" required />
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="LichHen.SoDienThoai" class="form-label">Số Điện Thoại</label>
+                        <input asp-for="LichHen.SoDienThoai" class="form-control" required />
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="LichHen.SoBangLaiXe" class="form-label">Số Bằng Lái Xe</label>
+                        <input asp-for="LichHen.SoBangLaiXe" class="form-control" required />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="LichHen.NgayHen" class="form-label">Ngày Hẹn</label>
+                        <input asp-for="LichHen.NgayHen" class="form-control" type="date" required />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="LichHen.GioHen" class="form-label">Giờ Hẹn</label>
+                        <input asp-for="LichHen.GioHen" class="form-control" type="time" required />
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="LichHen.YKienKhachHang" class="form-label">Ý Kiến Khách Hàng</label>
+                    <textarea asp-for="LichHen.YKienKhachHang" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="mb-3">
+                    <button type="submit" class="btn btn-primary">Thêm</button>
+                    <a asp-page="Index" class="btn btn-secondary">Hủy</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
